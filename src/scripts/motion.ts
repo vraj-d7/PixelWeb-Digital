@@ -237,7 +237,6 @@ function servicePreview() {
 	if (!list || !preview) return;
 	const rows = [...list.querySelectorAll<HTMLElement>('.svc')];
 	const imgs = [...preview.querySelectorAll<HTMLImageElement>('img')];
-	const cap = preview.querySelector('.svc-cap span');
 
 	gsap.set(preview, { xPercent: -50, yPercent: -50, scale: 0.6, autoAlpha: 0 });
 	gsap.set(imgs, { yPercent: 100 });
@@ -272,7 +271,6 @@ function servicePreview() {
 		row.addEventListener('pointerenter', () => {
 			if (i === current) return;
 			const img = imgs[i];
-			if (cap) cap.textContent = img.dataset.file ?? '';
 			if (current === -1) {
 				// First row entered: pop the frame in with this row's photo already in place.
 				gsap.set(imgs, { yPercent: 100 });
