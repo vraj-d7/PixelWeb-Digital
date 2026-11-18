@@ -1,0 +1,49 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { services } from '../data/site';
+---
+<Layout title="Services" description="Website design, web development, e-commerce stores, mobile-friendly builds and SEO from PixelWeb Digital.">
+	<section class="section page-head">
+		<div class="wrap stack">
+			<p class="kicker">what we do</p>
+			<h1>Everything you need <span class="accent">online.</span></h1>
+			<p class="lead">From a simple one-page site to a full online store, we handle the design, the code and the launch.</p>
+		</div>
+	</section>
+
+	<section class="wrap list">
+		{services.map((s, i) => (
+			<article class="card row">
+				<div class="head">
+					<span class="icon"><Icon name={s.icon} size={40} /></span>
+					<span class="note">0{i + 1} / 0{services.length}</span>
+				</div>
+				<div class="body">
+					<h2>{s.title}</h2>
+					<p class="desc">{s.body}</p>
+					<ul>
+						{s.points.map((p) => <li><Icon name="check" size={20} /> {p}</li>)}
+					</ul>
+				</div>
+			</article>
+		))}
+	</section>
+
+	<CtaBand />
+</Layout>
+
+<style>
+	.page-head { padding-bottom: 3rem; }
+	.list { display: grid; gap: 1.25rem; }
+	.row { display: grid; grid-template-columns: 14rem 1fr; gap: 2rem; }
+	.head { display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; }
+	.head .icon { margin: 0; }
+	.body h2 { font-size: clamp(1.75rem, 3.5vw, 2.5rem); }
+	.desc { margin-top: 0.85rem; font-size: 1.15rem; max-width: 40rem; }
+	ul { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 0.6rem; }
+	li { display: flex; align-items: center; gap: 0.6rem; color: var(--fg); }
+	li :global(svg) { color: var(--accent); flex: none; }
+	@media (max-width: 760px) { .row { grid-template-columns: 1fr; } .head { flex-direction: row; align-items: center; } }
+</style>

@@ -1,0 +1,93 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { steps, services } from '../data/site';
+---
+<Layout>
+	<section class="hero">
+		<div class="wrap hero-inner">
+			<p class="kicker prompt">hello_world<span class="cursor" aria-hidden="true">_</span></p>
+			<h1>Meet Pixel<span class="accent">Web</span><br />Digital.</h1>
+			<p class="lead">Websites that don't just look good — they bring you customers.</p>
+			<div class="btn-row">
+				<a class="btn btn-primary" href="/contact/">Get a free consultation <Icon name="arrow" size={20} /></a>
+				<a class="btn btn-ghost" href="/services/">See what we do</a>
+			</div>
+		</div>
+		<div class="pixels" aria-hidden="true"></div>
+	</section>
+
+	<section class="section">
+		<div class="wrap stack">
+			<p class="kicker">who we are</p>
+			<h2>We design <span class="accent">and</span><br />develop websites.</h2>
+			<p class="lead">One team from first sketch to final launch — no handoffs, no tech headaches for you.</p>
+			<div class="grid-3 steps">
+				{steps.map((step, i) => (
+					<div class="card">
+						<div class="step-top">
+							<span class="icon"><Icon name={step.icon} size={36} /></span>
+							<span class="note">0{i + 1}</span>
+						</div>
+						<h3>{step.title}</h3>
+						<p>{step.body}</p>
+					</div>
+				))}
+			</div>
+		</div>
+	</section>
+
+	<section class="section alt">
+		<div class="wrap stack">
+			<p class="kicker">what we do</p>
+			<h2>Everything you need online.</h2>
+			<ul class="service-list">
+				{services.map((s) => (
+					<li>
+						<a class="card service" href="/services/">
+							<span class="icon"><Icon name={s.icon} size={34} /></span>
+							<span>
+								<h3>{s.title}</h3>
+								<p>{s.short}</p>
+							</span>
+							<span class="go"><Icon name="arrow" size={22} /></span>
+						</a>
+					</li>
+				))}
+			</ul>
+		</div>
+	</section>
+
+	<CtaBand />
+</Layout>
+
+<style>
+	.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+	.hero-inner { position: relative; z-index: 1; padding-block: clamp(5rem, 14vw, 10rem); display: grid; gap: 1.75rem; justify-items: start; }
+	.cursor { animation: blink 1.1s steps(1) infinite; }
+	@keyframes blink { 50% { opacity: 0; } }
+
+	/* Faint pixel grid that fades in from the right, echoing the logo */
+	.pixels {
+		position: absolute; inset: 0;
+		background-image: radial-gradient(var(--line) 1.5px, transparent 1.5px);
+		background-size: 28px 28px;
+		mask-image: linear-gradient(100deg, transparent 35%, #000 90%);
+		-webkit-mask-image: linear-gradient(100deg, transparent 35%, #000 90%);
+	}
+
+	.steps { margin-top: 3rem; }
+	.step-top { display: flex; justify-content: space-between; align-items: flex-start; }
+
+	.alt { background: var(--bg-2); border-block: 1px solid var(--line); }
+	.service-list { list-style: none; padding: 0; margin: 3rem 0 0; display: grid; gap: 1rem; }
+	.service { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1.5rem; transition: background 0.15s, transform 0.15s; }
+	.service .icon { margin: 0; }
+	.service h3 { font-size: clamp(1.3rem, 2.6vw, 1.75rem); }
+	.service p { margin-top: 0.25rem; }
+	.service .go { color: var(--fg-3); transition: color 0.15s, transform 0.15s; }
+	.service:hover { background: #222; }
+	.service:hover .go { color: var(--accent); transform: translateX(4px); }
+	@media (max-width: 480px) { .service { grid-template-columns: auto 1fr; } .service .go { display: none; } }
+</style>

@@ -1,0 +1,18 @@
+---
+import type { IconName } from '../data/site';
+const { name, size = 24 } = Astro.props as { name: IconName; size?: number };
+const paths: Record<IconName, string> = {
+	monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/>',
+	code: '<path d="m8 7-5 5 5 5M16 7l5 5-5 5"/>',
+	cart: '<path d="M3 4h2l2.4 11h11L21 8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/>',
+	phone: '<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/>',
+	search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 5 5"/>',
+	rocket: '<path d="M14 4c3-1.5 6-1 6-1s.5 3-1 6l-7 7-5-5 7-7Z"/><path d="M7 12l-3 1 1-3M12 17l-1 3 3-1M5 19l2-2"/>',
+	arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+	mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>',
+	chat: '<path d="M4 20l1.4-4A8 8 0 1 1 8 18.6Z"/>',
+	instagram: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".6" fill="currentColor"/>',
+	check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+};
+---
+<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={paths[name]} />

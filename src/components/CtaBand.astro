@@ -1,0 +1,23 @@
+---
+import Icon from './Icon.astro';
+import { site } from '../data/site';
+---
+<section class="section">
+	<div class="wrap">
+		<div class="cta">
+			<p class="kicker">let's work together</p>
+			<h2>Ready to go <span class="accent">online?</span></h2>
+			<p class="lead">Small business, startup or personal brand: we'll build your online home from scratch.</p>
+			<div class="btn-row">
+				<a class="btn btn-primary" href={site.instagram.dm} target="_blank" rel="noopener">DM us “{site.instagram.keyword}” <Icon name="arrow" size={20} /></a>
+				<a class="btn btn-ghost" href="/contact/">Send a message</a>
+			</div>
+			<p class="small">Free consultation · No obligation</p>
+		</div>
+	</div>
+</section>
+
+<style>
+	.cta { background: var(--bg-2); border: 1px solid var(--line); border-radius: calc(var(--radius) * 1.5); padding: clamp(2rem, 6vw, 4.5rem); display: grid; gap: 1.5rem; justify-items: start; }
+	.small { font-weight: 600; }
+</style>

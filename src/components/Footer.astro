@@ -1,0 +1,37 @@
+---
+import Logo from './Logo.astro';
+import { nav, site, whatsappHref } from '../data/site';
+const year = new Date().getFullYear();
+---
+<footer class="footer">
+	<div class="wrap cols">
+		<div class="stack brand">
+			<Logo />
+			<p>We design and develop websites for small businesses, startups and personal brands.</p>
+		</div>
+		<div>
+			<p class="kicker">pages</p>
+			<ul>{nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}</ul>
+		</div>
+		<div>
+			<p class="kicker">say hello</p>
+			<ul>
+				<li><a href={site.instagram.href} target="_blank" rel="noopener">{site.instagram.handle}</a></li>
+				<li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+				{whatsappHref && <li><a href={whatsappHref} target="_blank" rel="noopener">WhatsApp</a></li>}
+			</ul>
+		</div>
+	</div>
+	<div class="wrap legal note">© {year} PixelWeb Digital · Built by us, obviously.</div>
+</footer>
+
+<style>
+	.footer { border-top: 1px solid var(--line); padding-top: 4rem; margin-top: 2rem; }
+	.cols { display: grid; gap: 2.5rem; grid-template-columns: 2fr 1fr 1fr; }
+	.brand p { color: var(--fg-2); max-width: 22rem; }
+	ul { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.6rem; }
+	ul a { color: var(--fg-2); transition: color 0.15s; overflow-wrap: anywhere; }
+	ul a:hover { color: var(--accent); }
+	.legal { padding-block: 3rem 2rem; margin-top: 3rem; border-top: 1px solid var(--line); }
+	@media (max-width: 760px) { .cols { grid-template-columns: 1fr 1fr; } .brand { grid-column: 1 / -1; } }
+</style>

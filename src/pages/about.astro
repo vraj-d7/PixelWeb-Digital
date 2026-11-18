@@ -1,0 +1,67 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import CtaBand from '../components/CtaBand.astro';
+import { steps } from '../data/site';
+
+const values = [
+	{ title: 'One team, start to finish', body: 'The people who design your site are the people who build it. No handoffs, nothing lost in translation.' },
+	{ title: 'Plain talk, no jargon', body: 'You get clear updates and straight answers. You never need to know what a DNS record is.' },
+	{ title: 'Built to bring customers', body: 'Pretty is the minimum. Every page is planned around getting visitors to call, book or buy.' },
+	{ title: 'We stick around', body: 'Launch is not goodbye. We test everything and support your site after it goes live.' },
+];
+---
+<Layout title="About" description="PixelWeb Digital is one team that designs and develops websites for small businesses, startups and personal brands, from first sketch to launch.">
+	<section class="section">
+		<div class="wrap stack">
+			<p class="kicker">who we are</p>
+			<h1>We design <span class="accent">and</span> develop websites.</h1>
+			<p class="lead">PixelWeb Digital is a small studio that builds online homes for small businesses, startups and personal brands. One team from first sketch to final launch — no handoffs, no tech headaches for you.</p>
+		</div>
+	</section>
+
+	<section class="section alt">
+		<div class="wrap stack">
+			<p class="kicker">how we work</p>
+			<h2>Three steps to <span class="accent">live.</span></h2>
+			<ol class="grid-3 steps">
+				{steps.map((step, i) => (
+					<li class="card">
+						<span class="num">0{i + 1}</span>
+						<span class="icon"><Icon name={step.icon} size={36} /></span>
+						<h3>{step.title}</h3>
+						<p>{step.body}</p>
+					</li>
+				))}
+			</ol>
+		</div>
+	</section>
+
+	<section class="section">
+		<div class="wrap stack">
+			<p class="kicker">what you can expect</p>
+			<h2>The way we work.</h2>
+			<div class="values">
+				{values.map((v) => (
+					<div class="value">
+						<h3>{v.title}</h3>
+						<p>{v.body}</p>
+					</div>
+				))}
+			</div>
+		</div>
+	</section>
+
+	<CtaBand />
+</Layout>
+
+<style>
+	.alt { background: var(--bg-2); border-block: 1px solid var(--line); }
+	.steps { list-style: none; padding: 0; margin: 3rem 0 0; }
+	.steps .card { position: relative; }
+	.num { position: absolute; top: 1.75rem; right: 2rem; font-family: var(--mono); font-weight: 700; font-size: 2.5rem; color: var(--line); }
+	.values { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 0; margin-top: 3rem; border-top: 1px solid var(--line); }
+	.value { padding: 2rem 2rem 2rem 0; border-bottom: 1px solid var(--line); }
+	.value h3::before { content: '■ '; color: var(--accent); font-size: 0.8em; }
+	.value p { color: var(--fg-2); margin-top: 0.6rem; max-width: 30rem; }
+</style>

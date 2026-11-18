@@ -1,0 +1,110 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import { services, site, whatsappHref } from '../data/site';
+---
+<Layout title="Contact" description="Get a free, no-obligation consultation for your new website. DM PixelWeb Digital on Instagram, send a message or email us.">
+	<section class="section">
+		<div class="wrap layout">
+			<div class="stack intro">
+				<p class="kicker">let's work together</p>
+				<h1>Ready to go <span class="accent">online?</span></h1>
+				<p class="lead">Tell us a little about your business and we'll get back to you within one working day.</p>
+				<p class="free">Free consultation · No obligation</p>
+
+				<ul class="channels">
+					<li>
+						<a class="card channel" href={site.instagram.dm} target="_blank" rel="noopener">
+							<span class="icon"><Icon name="instagram" size={28} /></span>
+							<span><strong>DM us “{site.instagram.keyword}”</strong><span class="sub">{site.instagram.handle} on Instagram</span></span>
+						</a>
+					</li>
+					{whatsappHref && (
+						<li>
+							<a class="card channel" href={whatsappHref} target="_blank" rel="noopener">
+								<span class="icon"><Icon name="chat" size={28} /></span>
+								<span><strong>WhatsApp us</strong><span class="sub">Quick replies on chat</span></span>
+							</a>
+						</li>
+					)}
+					<li>
+						<a class="card channel" href={`mailto:${site.email}`}>
+							<span class="icon"><Icon name="mail" size={28} /></span>
+							<span><strong>Email us</strong><span class="sub">{site.email}</span></span>
+						</a>
+					</li>
+				</ul>
+			</div>
+
+			<form class="card form" id="contact-form" method="POST" action={site.formEndpoint || undefined} data-email={site.email}>
+				<h2>Send a message</h2>
+				<label>Your name<input name="name" autocomplete="name" required /></label>
+				<label>Email<input name="email" type="email" autocomplete="email" required /></label>
+				<label>Business or brand name<input name="business" autocomplete="organization" /></label>
+				<label>What do you need?
+					<select name="service">
+						<option value="">Not sure yet</option>
+						{services.map((s) => <option>{s.title}</option>)}
+					</select>
+				</label>
+				<label>Tell us about your project<textarea name="message" rows="5" required></textarea></label>
+				<button class="btn btn-primary" type="submit">Send message <Icon name="arrow" size={20} /></button>
+				<p class="status note" role="status" aria-live="polite"></p>
+			</form>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const form = document.getElementById('contact-form') as HTMLFormElement;
+	const status = form.querySelector('.status') as HTMLElement;
+
+	form.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		const data = new FormData(form);
+
+		// No form service set up yet: open the visitor's email app with the message filled in.
+		if (!form.getAttribute('action')) {
+			const subject = `New website enquiry from ${data.get('name')}`;
+			const body = ['name', 'email', 'business', 'service', 'message']
+				.map((key) => `${key}: ${data.get(key) || '-'}`)
+				.join('\n');
+			window.location.href = `mailto:${form.dataset.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+			return;
+		}
+
+		status.textContent = 'Sending…';
+		try {
+			const res = await fetch(form.action, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
+			if (!res.ok) throw new Error();
+			form.reset();
+			status.textContent = '> message_sent. We’ll be in touch soon.';
+		} catch {
+			status.textContent = 'Something went wrong. Please DM us on Instagram or email us instead.';
+		}
+	});
+</script>
+
+<style>
+	.layout { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: start; }
+	.free { font-weight: 600; }
+	.channels { list-style: none; padding: 0; margin: 2.5rem 0 0; display: grid; gap: 0.85rem; }
+	.channel { display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem 1.5rem; transition: background 0.15s; }
+	.channel:hover { background: #222; }
+	.channel .icon { margin: 0; }
+	.channel strong { display: block; font-size: 1.1rem; }
+	.sub { display: block; color: var(--fg-2); font-size: 0.95rem; overflow-wrap: anywhere; }
+
+	.form { display: grid; gap: 1.15rem; }
+	.form h2 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+	label { display: grid; gap: 0.45rem; font-weight: 500; font-size: 0.95rem; }
+	input, select, textarea {
+		font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line);
+		border-radius: 0.85rem; padding: 0.85rem 1rem; width: 100%;
+	}
+	input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+	textarea { resize: vertical; }
+	.form .btn { justify-self: start; margin-top: 0.5rem; }
+	.status:empty { display: none; }
+	@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+</style>
