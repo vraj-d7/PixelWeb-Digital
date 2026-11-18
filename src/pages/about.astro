@@ -15,18 +15,18 @@ const values = [
 	<section class="section">
 		<div class="wrap stack">
 			<p class="kicker">who we are</p>
-			<h1>We design <span class="accent">and</span> develop websites.</h1>
-			<p class="lead">PixelWeb Digital is a small studio that builds online homes for small businesses, startups and personal brands. One team from first sketch to final launch — no handoffs, no tech headaches for you.</p>
+			<h1 data-split>We design <span class="accent">and</span> develop websites.</h1>
+			<p class="lead" data-reveal>PixelWeb Digital is a small studio that builds online homes for small businesses, startups and personal brands. One team from first sketch to final launch — no handoffs, no tech headaches for you.</p>
 		</div>
 	</section>
 
 	<section class="section alt">
 		<div class="wrap stack">
 			<p class="kicker">how we work</p>
-			<h2>Three steps to <span class="accent">live.</span></h2>
+			<h2 data-split>Three steps to <span class="accent">live.</span></h2>
 			<ol class="grid-3 steps">
 				{steps.map((step, i) => (
-					<li class="card">
+					<li class="card" data-reveal data-spot>
 						<span class="num">0{i + 1}</span>
 						<span class="icon"><Icon name={step.icon} size={36} /></span>
 						<h3>{step.title}</h3>
@@ -40,10 +40,10 @@ const values = [
 	<section class="section">
 		<div class="wrap stack">
 			<p class="kicker">what you can expect</p>
-			<h2>The way we work.</h2>
+			<h2 data-split>The way we work.</h2>
 			<div class="values">
 				{values.map((v) => (
-					<div class="value">
+					<div class="value" data-reveal>
 						<h3>{v.title}</h3>
 						<p>{v.body}</p>
 					</div>

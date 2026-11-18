@@ -1,0 +1,29 @@
+---
+// Full-screen pixel grid used for the intro and page transitions (driven by src/scripts/motion.ts).
+const white = [[0,0],[1,0],[2,0],[3,0],[0,1],[0,2],[1,2],[2,2],[3,2],[0,3],[0,4]];
+---
+<div class="loader" aria-hidden="true">
+	<div class="loader-grid"></div>
+	<div class="loader-logo">
+		<svg viewBox="0 0 20 20">
+			{white.map(([x, y]) => <rect class="lp" x={x * 4} y={y * 4} width="3" height="3" fill="#fff" />)}
+			<rect class="lp" x="16" y="4" width="3" height="3" fill="var(--accent)" />
+		</svg>
+		<p>&gt; loading <span class="loader-count">0</span>%</p>
+	</div>
+</div>
+
+<style>
+	.loader { position: fixed; inset: 0; z-index: 100; display: none; background: var(--bg); }
+	:global(html.motion) .loader { display: block; animation: loader-fallback 0.4s 5s forwards; }
+	.loader.ready { background: transparent; }
+	@keyframes loader-fallback { to { opacity: 0; visibility: hidden; } }
+
+	.loader-grid { position: absolute; inset: 0; display: grid; }
+	.loader-grid :global(i) { display: block; background: var(--bg); box-shadow: 0 0 0 1px var(--bg); }
+
+	.loader-logo { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 1.5rem; }
+	:global(html.seen) .loader-logo { display: none; }
+	.loader-logo svg { width: 5.5rem; height: 5.5rem; }
+	.loader-logo p { font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 0.95rem; }
+</style>

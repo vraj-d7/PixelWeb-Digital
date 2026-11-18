@@ -1,6 +1,7 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Loader from '../components/Loader.astro';
 import { site } from '../data/site';
 import '@fontsource/space-grotesk/400.css';
 import '@fontsource/space-grotesk/500.css';
@@ -31,10 +32,24 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 		<meta property="og:site_name" content={site.name} />
 		{noindex && <meta name="robots" content="noindex" />}
 		<link rel="sitemap" href="/sitemap-index.xml" />
+		<script is:inline>
+			// Decide before first paint whether to run animations, and whether the intro was already seen this visit.
+			(function () {
+				var c = document.documentElement.classList;
+				c.add('js');
+				if (!matchMedia('(prefers-reduced-motion: reduce)').matches) c.add('motion');
+				try { if (sessionStorage.getItem('pw-seen')) c.add('seen'); } catch (e) {}
+			})();
+		</script>
 	</head>
 	<body>
+		<Loader />
+		<div class="progress" aria-hidden="true"></div>
 		<Header />
 		<main><slot /></main>
 		<Footer />
+		<script>
+			import '../scripts/motion';
+		</script>
 	</body>
 </html>

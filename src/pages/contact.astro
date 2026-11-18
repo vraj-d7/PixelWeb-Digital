@@ -8,26 +8,26 @@ import { services, site, whatsappHref } from '../data/site';
 		<div class="wrap layout">
 			<div class="stack intro">
 				<p class="kicker">let's work together</p>
-				<h1>Ready to go <span class="accent">online?</span></h1>
-				<p class="lead">Tell us a little about your business and we'll get back to you within one working day.</p>
+				<h1 data-split>Ready to go <span class="accent">online?</span></h1>
+				<p class="lead" data-reveal>Tell us a little about your business and we'll get back to you within one working day.</p>
 				<p class="free">Free consultation · No obligation</p>
 
 				<ul class="channels">
-					<li>
+					<li data-reveal>
 						<a class="card channel" href={site.instagram.dm} target="_blank" rel="noopener">
 							<span class="icon"><Icon name="instagram" size={28} /></span>
 							<span><strong>DM us “{site.instagram.keyword}”</strong><span class="sub">{site.instagram.handle} on Instagram</span></span>
 						</a>
 					</li>
 					{whatsappHref && (
-						<li>
+						<li data-reveal>
 							<a class="card channel" href={whatsappHref} target="_blank" rel="noopener">
 								<span class="icon"><Icon name="chat" size={28} /></span>
 								<span><strong>WhatsApp us</strong><span class="sub">Quick replies on chat</span></span>
 							</a>
 						</li>
 					)}
-					<li>
+					<li data-reveal>
 						<a class="card channel" href={`mailto:${site.email}`}>
 							<span class="icon"><Icon name="mail" size={28} /></span>
 							<span><strong>Email us</strong><span class="sub">{site.email}</span></span>
@@ -36,7 +36,7 @@ import { services, site, whatsappHref } from '../data/site';
 				</ul>
 			</div>
 
-			<form class="card form" id="contact-form" method="POST" action={site.formEndpoint || undefined} data-email={site.email}>
+			<form class="card form" data-reveal id="contact-form" method="POST" action={site.formEndpoint || undefined} data-email={site.email}>
 				<h2>Send a message</h2>
 				<label>Your name<input name="name" autocomplete="name" required /></label>
 				<label>Email<input name="email" type="email" autocomplete="email" required /></label>
@@ -48,7 +48,7 @@ import { services, site, whatsappHref } from '../data/site';
 					</select>
 				</label>
 				<label>Tell us about your project<textarea name="message" rows="5" required></textarea></label>
-				<button class="btn btn-primary" type="submit">Send message <Icon name="arrow" size={20} /></button>
+				<button class="btn btn-primary" type="submit" data-magnetic>Send message <Icon name="arrow" size={20} /></button>
 				<p class="status note" role="status" aria-live="polite"></p>
 			</form>
 		</div>

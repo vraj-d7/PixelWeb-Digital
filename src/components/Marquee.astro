@@ -1,0 +1,39 @@
+---
+// Two giant text bands moving in opposite directions; they speed up and flip with scrolling.
+const items = ['Website Design', 'Web Development', 'E-commerce', 'Mobile-first', 'SEO-ready', 'Fast & Secure'];
+const rows = [
+	{ dir: -1, outline: false },
+	{ dir: 1, outline: true },
+];
+---
+<section class="marquees" aria-label="What we do">
+	{rows.map((row) => (
+		<div class:list={['marquee', { outline: row.outline }]} data-marquee={row.dir} aria-hidden={row.outline ? 'true' : undefined}>
+			<div class="marquee-track">
+				{[0, 1].map((copy) => (
+					<div class="marquee-group" aria-hidden={copy === 1 ? 'true' : undefined}>
+						{[...items, ...items].map((item) => (
+							<span class="item">{item}<i class="dot" aria-hidden="true"></i></span>
+						))}
+					</div>
+				))}
+			</div>
+		</div>
+	))}
+</section>
+
+<style>
+	.marquees { overflow: hidden; padding-block: clamp(2.5rem, 6vw, 4.5rem); border-block: 1px solid var(--line); }
+	.marquee { overflow: hidden; }
+	.marquee + .marquee { margin-top: 0.25rem; }
+	.marquee-track { display: flex; width: max-content; will-change: transform; }
+	.marquee-group { display: flex; }
+	.item {
+		display: inline-flex; align-items: center; gap: clamp(1.25rem, 3vw, 2.5rem); padding-right: clamp(1.25rem, 3vw, 2.5rem);
+		font-size: clamp(2.75rem, 8vw, 7rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1.1; white-space: nowrap;
+	}
+	.dot { width: 0.32em; height: 0.32em; background: var(--accent); flex: none; }
+	.outline .item { color: transparent; -webkit-text-stroke: 1.5px #3a3a3a; }
+	.outline .dot { background: transparent; outline: 1.5px solid #3a3a3a; outline-offset: -1.5px; }
+	:global(html:not(.motion)) .marquee-track { transform: translateX(-10%); }
+</style>
