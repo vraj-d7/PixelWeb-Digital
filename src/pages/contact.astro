@@ -1,119 +1,566 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Icon from '../components/Icon.astro';
+import QRCode from 'qrcode';
 import { services, site, whatsappHref } from '../data/site';
+import { indiaRows, MAP_LEFT, MAP_TOP } from '../data/india-map';
+
+const dev = import.meta.env.DEV; // placeholders for missing settings only show in local preview
+
+// Step choices
+const serviceOpts = [...services.map((s) => s.title), 'Not sure yet'];
+const budgetOpts = ['Under ₹25k', '₹25k – 50k', '₹50k – 1L', '₹1L +', 'Not sure yet'];
+const timelineOpts = ['As soon as possible', 'In 1–2 months', 'Just exploring'];
+
+// WhatsApp QR code, generated at build time (only when a number is set).
+const qrSvg = whatsappHref
+	? await QRCode.toString(whatsappHref, { type: 'svg', margin: 0, color: { dark: '#a3e635ff', light: '#00000000' } })
+	: '';
+
+// Pixel map: one square per land cell, delayed by distance from the pin so it lights up in a wave.
+const pin = { x: site.geo.lon - MAP_LEFT, y: MAP_TOP - site.geo.lat };
+const cells = indiaRows.flatMap(([lat, spans]) =>
+	spans.flatMap(([a, b]) => Array.from({ length: b - a + 1 }, (_, k) => {
+		const x = a + k - MAP_LEFT, y = MAP_TOP - lat;
+		return { x, y, d: Math.hypot(x - pin.x, y - pin.y) };
+	})),
+);
+const mapW = 30, mapH = MAP_TOP - 8 + 1;
+
+const faq = [
+	{ q: 'Is the call really free?', a: "Yes. It's a no-obligation chat about your business and what you need. No pressure, no hard sell." },
+	{ q: "What if I don't know exactly what I need?", a: "That's normal. Pick 'Not sure yet' and we'll work it out together on the call." },
+	{ q: 'Do I need my content ready?', a: "No. Your logo and a few photos help, but we can plan the rest with you." },
+	{ q: 'How fast will you reply?', a: 'Within one working day, usually sooner.' },
+];
 ---
 <Layout title="Contact" description="Get a free, no-obligation consultation for your new website. DM PixelWeb Digital on Instagram, send a message or email us.">
-	<section class="section">
-		<div class="wrap layout">
-			<div class="stack intro">
-				<p class="kicker">let's work together</p>
-				<h1 data-split>Ready to go <span class="accent">online?</span></h1>
-				<p class="lead" data-reveal>Tell us a little about your business and we'll get back to you within one working day.</p>
-				<p class="free">Free consultation · No obligation</p>
-
-				<ul class="channels">
-					<li data-reveal>
-						<a class="card channel" href={site.instagram.dm} target="_blank" rel="noopener">
-							<span class="icon"><Icon name="instagram" size={28} /></span>
-							<span><strong>DM us “{site.instagram.keyword}”</strong><span class="sub">{site.instagram.handle} on Instagram</span></span>
-						</a>
-					</li>
-					{whatsappHref && (
-						<li data-reveal>
-							<a class="card channel" href={whatsappHref} target="_blank" rel="noopener">
-								<span class="icon"><Icon name="chat" size={28} /></span>
-								<span><strong>WhatsApp us</strong><span class="sub">Quick replies on chat</span></span>
-							</a>
-						</li>
-					)}
-					<li data-reveal>
-						<a class="card channel" href={`mailto:${site.email}`}>
-							<span class="icon"><Icon name="mail" size={28} /></span>
-							<span><strong>Email us</strong><span class="sub">{site.email}</span></span>
-						</a>
-					</li>
-				</ul>
+	<!-- Intro + availability -->
+	<section class="section intro-sec">
+		<div class="wrap stack">
+			<p class="kicker">let's work together</p>
+			<h1 data-split>Ready to go <span class="accent">online?</span></h1>
+			<p class="lead" data-reveal>Answer a few quick questions and we'll get back to you within one working day.</p>
+			<div class="trust" data-reveal>
+				<p class="avail" data-availability data-tz={site.timeZone} data-days={site.hours.days.join(',')} data-open={site.hours.open} data-close={site.hours.close}>
+					<i class="avail-dot" aria-hidden="true"></i><span data-avail-text>Replies within one working day</span>
+				</p>
+				<p class="note">free consultation · no obligation</p>
 			</div>
-
-			<form class="card form" data-reveal id="contact-form" method="POST" action={site.formEndpoint || undefined} data-email={site.email}>
-				<h2>Send a message</h2>
-				<label>Your name<input name="name" autocomplete="name" required /></label>
-				<label>Email<input name="email" type="email" autocomplete="email" required /></label>
-				<label>Business or brand name<input name="business" autocomplete="organization" /></label>
-				<label>What do you need?
-					<select name="service">
-						<option value="">Not sure yet</option>
-						{services.map((s) => <option>{s.title}</option>)}
-					</select>
-				</label>
-				<label>Tell us about your project<textarea name="message" rows="5" required></textarea></label>
-				<button class="btn btn-primary" type="submit" data-magnetic>Send message <Icon name="arrow" size={20} /></button>
-				<p class="status note" role="status" aria-live="polite"></p>
-			</form>
 		</div>
 	</section>
+
+	<!-- Step-by-step form + live brief -->
+	<section class="wrap form-grid">
+		<form class="card wizard" id="contact-form" method="POST" action={site.formEndpoint || undefined} data-email={site.email} novalidate data-reveal>
+			<div class="wz-head" aria-hidden="true">
+				<div class="wz-progress">{[0, 1, 2, 3, 4].map(() => <i></i>)}</div>
+				<p class="note">step <span data-step-num>1</span> / 5</p>
+			</div>
+
+			<fieldset class="wz-step is-active" data-step="0">
+				<legend>What do you need?</legend>
+				<div class="opts">
+					{serviceOpts.map((o) => <label class="opt"><input type="radio" name="service" value={o} /><span>{o}</span></label>)}
+				</div>
+			</fieldset>
+
+			<fieldset class="wz-step" data-step="1">
+				<legend>What's your budget?</legend>
+				<p class="hint">A rough idea helps us suggest the right package.</p>
+				<div class="opts">
+					{budgetOpts.map((o) => <label class="opt"><input type="radio" name="budget" value={o} /><span>{o}</span></label>)}
+				</div>
+			</fieldset>
+
+			<fieldset class="wz-step" data-step="2">
+				<legend>When do you need it?</legend>
+				<div class="opts">
+					{timelineOpts.map((o) => <label class="opt"><input type="radio" name="timeline" value={o} /><span>{o}</span></label>)}
+				</div>
+			</fieldset>
+
+			<fieldset class="wz-step" data-step="3">
+				<legend>Tell us about your business</legend>
+				<label class="field">Business or brand name<input name="business" autocomplete="organization" placeholder="Corner Bakery" /></label>
+				<label class="field">What should the website do for you?
+					<textarea name="message" rows="5" required placeholder="We sell cakes locally and want people to order online…"></textarea>
+					<span class="err" data-err-for="message">A sentence or two about your project helps us prepare.</span>
+				</label>
+			</fieldset>
+
+			<fieldset class="wz-step" data-step="4">
+				<legend>How do we reach you?</legend>
+				<label class="field">Your name<input name="name" autocomplete="name" required placeholder="Priya Shah" />
+					<span class="err" data-err-for="name">Tell us your name.</span>
+				</label>
+				<label class="field">Email<input name="email" type="email" autocomplete="email" required placeholder="you@business.com" />
+					<span class="err" data-err-for="email">That email looks off. Check for typos.</span>
+				</label>
+				<label class="field">Phone or WhatsApp <span class="opt-tag">optional</span><input name="phone" type="tel" autocomplete="tel" placeholder="+91 98765 43210" /></label>
+			</fieldset>
+
+			<!-- Spam trap: people never see or fill this; bots do. -->
+			<div class="hp" aria-hidden="true"><label>Leave this empty<input name="_gotcha" tabindex="-1" autocomplete="off" /></label></div>
+
+			<p class="wz-error" role="alert" data-error></p>
+			<div class="wz-nav">
+				<button type="button" class="btn btn-ghost" data-back>Back</button>
+				<button type="button" class="btn btn-primary" data-next>Next <Icon name="arrow" size={18} /></button>
+				<button type="submit" class="btn btn-primary" data-submit>Send message <Icon name="arrow" size={18} /></button>
+			</div>
+
+			<div class="done" data-done hidden>
+				<p class="note done-tag" data-done-tag>&gt; message_sent ✓</p>
+				<h2>Thanks, <span data-done-name>friend</span>!</h2>
+				<p class="done-text" data-done-text>Your message is on its way to us.</p>
+				<ol class="next-steps">
+					<li><span>01</span>We reply within one working day.</li>
+					<li><span>02</span>We have a free call to talk it through.</li>
+					<li><span>03</span>You get a clear plan and quote.</li>
+				</ol>
+			</div>
+		</form>
+
+		<aside class="brief" aria-label="Your project brief" data-reveal>
+			<div class="term-bar" aria-hidden="true"><i></i><i></i><i></i><span>project_brief.txt</span></div>
+			<dl class="brief-body">
+				<div><dt>service</dt><dd data-brief="service">...</dd></div>
+				<div><dt>budget</dt><dd data-brief="budget">...</dd></div>
+				<div><dt>timeline</dt><dd data-brief="timeline">...</dd></div>
+				<div><dt>business</dt><dd data-brief="business">...</dd></div>
+				<div><dt>message</dt><dd data-brief="message">...</dd></div>
+				<div><dt>name</dt><dd data-brief="name">...</dd></div>
+				<div><dt>email</dt><dd data-brief="email">...</dd></div>
+			</dl>
+			<p class="brief-foot note"><span class="blink">▌</span> filling in as you type</p>
+		</aside>
+	</section>
+
+	<!-- Direct channels -->
+	<section class="section">
+		<div class="wrap stack">
+			<p class="kicker" data-reveal>prefer to talk directly?</p>
+			<h2 data-split>Pick your <span class="accent">channel.</span></h2>
+			<div class="channels">
+				<a class="card channel" href={site.instagram.dm} target="_blank" rel="noopener" data-reveal data-spot>
+					<span class="ch-icon"><Icon name="instagram" size={28} /></span>
+					<strong>DM us “{site.instagram.keyword}”</strong>
+					<span class="sub">{site.instagram.handle} on Instagram</span>
+				</a>
+
+				<div class="card channel" data-reveal data-spot>
+					<span class="ch-icon"><Icon name="mail" size={28} /></span>
+					<strong>Email us</strong>
+					<span class="sub">{site.email}</span>
+					<div class="ch-actions">
+						<a class="btn btn-ghost sm" href={`mailto:${site.email}`}>Write email</a>
+						<button type="button" class="btn btn-primary sm" data-copy={site.email}>Copy address</button>
+					</div>
+				</div>
+
+				{(whatsappHref || dev) && (
+					<div class="card channel" data-reveal data-spot>
+						{!whatsappHref && <span class="ph-badge">placeholder · add whatsapp in site.ts</span>}
+						<span class="ch-icon"><Icon name="chat" size={28} /></span>
+						<strong>WhatsApp us</strong>
+						<span class="sub">Scan with your phone, or tap on mobile</span>
+						{qrSvg ? <div class="qr" set:html={qrSvg} /> : <div class="qr qr-ph" aria-hidden="true"></div>}
+						{whatsappHref && <a class="btn btn-ghost sm" href={whatsappHref} target="_blank" rel="noopener">Open chat</a>}
+					</div>
+				)}
+
+				{(site.bookingUrl || dev) && (
+					<div class="card channel" data-reveal data-spot>
+						{!site.bookingUrl && <span class="ph-badge">placeholder · add bookingUrl in site.ts</span>}
+						<span class="ch-icon"><Icon name="phone" size={28} /></span>
+						<strong>Book a free call</strong>
+						<span class="sub">Pick a time that suits you</span>
+						<div class="slots" aria-hidden="true">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((d, i) => <span class:list={{ on: i === 2 }}>{d}</span>)}</div>
+						{site.bookingUrl && <a class="btn btn-primary sm" href={site.bookingUrl} target="_blank" rel="noopener">Choose a time</a>}
+					</div>
+				)}
+			</div>
+		</div>
+	</section>
+
+	<!-- FAQ + pixel map -->
+	<section class="section alt">
+		<div class="wrap faq-map">
+			<div class="stack">
+				<p class="kicker" data-reveal>before you ask</p>
+				<h2 data-split>Quick <span class="accent">answers.</span></h2>
+				<div class="faq">
+					{faq.map((f, i) => (
+						<details class="qa" data-reveal open={i === 0}>
+							<summary><span>{f.q}</span><span class="plus" aria-hidden="true"></span></summary>
+							<p>{f.a}</p>
+						</details>
+					))}
+				</div>
+			</div>
+			<figure class="map" data-map data-reveal>
+				<svg viewBox={`0 0 ${mapW} ${mapH}`} role="img" aria-label={`Pixel map of India with a pin on ${site.city}`}>
+					{cells.map((c) => <rect x={c.x + 0.12} y={c.y + 0.12} width="0.76" height="0.76" style={`--d:${(c.d * 0.035).toFixed(2)}s`} />)}
+					<rect class="pin-pulse" x={Math.floor(pin.x) - 0.5} y={Math.floor(pin.y) - 0.5} width="2" height="2" />
+					<rect class="pin" x={Math.floor(pin.x) + 0.05} y={Math.floor(pin.y) + 0.05} width="0.9" height="0.9" />
+				</svg>
+				<figcaption class="note">&gt; based in <span>{site.city}</span> · working with clients everywhere</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<div class="toast note" data-toast role="status" aria-live="polite"></div>
 </Layout>
 
 <script>
-	const form = document.getElementById('contact-form') as HTMLFormElement;
-	const status = form.querySelector('.status') as HTMLElement;
+	import gsap from 'gsap';
 
-	// Coming from a "Start a ... project" or "Get a quote" button: pre-fill what they picked.
+	const motion = document.documentElement.classList.contains('motion');
+	const form = document.getElementById('contact-form') as HTMLFormElement;
+	const steps = [...form.querySelectorAll<HTMLFieldSetElement>('.wz-step')];
+	const bars = [...form.querySelectorAll<HTMLElement>('.wz-progress i')];
+	const stepNum = form.querySelector<HTMLElement>('[data-step-num]');
+	const back = form.querySelector<HTMLButtonElement>('[data-back]')!;
+	const next = form.querySelector<HTMLButtonElement>('[data-next]')!;
+	const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+	const errorBox = form.querySelector<HTMLElement>('[data-error]')!;
+	let current = 0;
+
+	form.classList.add('js-wizard');
+
+	/* ---------- steps ---------- */
+	function show(i: number, focus = true) {
+		current = Math.max(0, Math.min(steps.length - 1, i));
+		steps.forEach((s, k) => s.classList.toggle('is-active', k === current));
+		bars.forEach((b, k) => b.classList.toggle('on', k <= current));
+		if (stepNum) stepNum.textContent = String(current + 1);
+		back.hidden = current === 0;
+		next.hidden = current === steps.length - 1;
+		submit.hidden = current !== steps.length - 1;
+		errorBox.textContent = '';
+		if (motion) gsap.fromTo(steps[current], { autoAlpha: 0, x: 24 }, { autoAlpha: 1, x: 0, duration: 0.45, ease: 'expo.out' });
+		if (focus) steps[current].querySelector<HTMLElement>('input, textarea')?.focus({ preventScroll: true });
+	}
+
+	// Check required fields in a step and show friendly messages next to them.
+	function valid(step: HTMLElement) {
+		let ok = true;
+		step.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[required]').forEach((f) => {
+			const bad = !f.value.trim() || !f.checkValidity();
+			f.closest('.field')?.classList.toggle('has-err', bad);
+			f.setAttribute('aria-invalid', String(bad));
+			if (bad && ok) { f.focus(); ok = false; }
+		});
+		if (!ok) errorBox.textContent = 'A couple of things need a look.';
+		return ok;
+	}
+	form.querySelectorAll<HTMLElement>('input, textarea').forEach((f) =>
+		f.addEventListener('input', () => { f.closest('.field')?.classList.remove('has-err'); f.removeAttribute('aria-invalid'); errorBox.textContent = ''; }),
+	);
+
+	next.addEventListener('click', () => valid(steps[current]) && show(current + 1));
+	back.addEventListener('click', () => show(current - 1));
+	// Choosing an option moves on by itself.
+	form.querySelectorAll<HTMLInputElement>('input[type="radio"]').forEach((r) =>
+		r.addEventListener('change', () => setTimeout(() => current < 3 && show(current + 1), 320)),
+	);
+	// Enter in a text field goes to the next step instead of submitting early.
+	form.addEventListener('keydown', (e) => {
+		if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT' && current < steps.length - 1) {
+			e.preventDefault();
+			next.click();
+		}
+	});
+
+	/* ---------- live project brief ---------- */
+	const brief = (key: string, value: string) => {
+		const el = document.querySelector<HTMLElement>(`[data-brief="${key}"]`);
+		if (!el) return;
+		const text = value.trim() ? `"${value.trim().slice(0, 90)}${value.trim().length > 90 ? '…' : ''}"` : '...';
+		if (el.textContent === text) return;
+		el.textContent = text;
+		el.classList.toggle('set', !!value.trim());
+		el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+	};
+	form.addEventListener('input', (e) => {
+		const f = e.target as HTMLInputElement;
+		if (f.name && f.name !== '_gotcha') brief(f.name, f.value);
+	});
+
+	/* ---------- pre-fill from service / package buttons ---------- */
 	const params = new URLSearchParams(location.search);
 	const service = params.get('service');
 	const pkg = params.get('package');
-	const select = form.querySelector<HTMLSelectElement>('select[name="service"]');
-	const message = form.querySelector<HTMLTextAreaElement>('textarea[name="message"]');
-	if (service && select && [...select.options].some((o) => o.value === service)) select.value = service;
-	if (pkg && message && !message.value) message.value = `Hi! I'm interested in the ${pkg} package. `;
+	if (service) {
+		const r = form.querySelector<HTMLInputElement>(`input[name="service"][value="${CSS.escape(service)}"]`);
+		if (r) { r.checked = true; brief('service', service); }
+	}
+	if (pkg) {
+		const msg = form.querySelector<HTMLTextAreaElement>('textarea[name="message"]');
+		if (msg && !msg.value) { msg.value = `Hi! I'm interested in the ${pkg} package. `; brief('message', msg.value); }
+	}
+	show(service ? 1 : 0, false);
+
+	/* ---------- sending ---------- */
+	function celebrate(name: string, viaEmailApp: boolean) {
+		const done = form.querySelector<HTMLElement>('[data-done]')!;
+		form.querySelector('[data-done-name]')!.textContent = name || 'friend';
+		if (viaEmailApp) {
+			form.querySelector('[data-done-tag]')!.textContent = '> email_ready ✓';
+			form.querySelector('[data-done-text]')!.textContent = 'Your email app should have opened with everything filled in. Just press send.';
+		}
+		[...form.children].forEach((c) => c !== done && ((c as HTMLElement).hidden = true));
+		done.hidden = false;
+		if (!motion) return;
+		gsap.from(done.children, { y: 24, autoAlpha: 0, stagger: 0.08, duration: 0.7, ease: 'expo.out' });
+		// Pixel confetti
+		const r = form.getBoundingClientRect();
+		for (let i = 0; i < 70; i++) {
+			const p = document.createElement('i');
+			p.className = 'confetti';
+			p.style.background = Math.random() < 0.7 ? '#a3e635' : '#ffffff';
+			form.append(p);
+			const angle = Math.random() * Math.PI - Math.PI;
+			const power = 180 + Math.random() * 260;
+			gsap.set(p, { x: r.width / 2, y: r.height * 0.35, width: 6 + Math.random() * 8, height: 6 + Math.random() * 8 });
+			gsap.to(p, { x: `+=${Math.cos(angle) * power}`, duration: 1.6, ease: 'power2.out' });
+			gsap.to(p, { y: `+=${Math.sin(angle) * power * 0.8}`, duration: 0.6, ease: 'power2.out' });
+			gsap.to(p, { y: `+=${260 + Math.random() * 200}`, rotation: Math.random() * 360, duration: 1.2, delay: 0.6, ease: 'power2.in', onComplete: () => p.remove() });
+			gsap.to(p, { autoAlpha: 0, duration: 0.4, delay: 1.4 });
+		}
+	}
 
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();
+		if (!valid(steps[current])) return;
 		const data = new FormData(form);
+		const name = String(data.get('name') ?? '').trim().split(' ')[0];
 
-		// No form service set up yet: open the visitor's email app with the message filled in.
+		// A bot filled the hidden field: pretend it worked and send nothing.
+		if (String(data.get('_gotcha') ?? '')) return celebrate(name, false);
+		data.delete('_gotcha');
+
+		// No form service connected yet: open the visitor's email app with everything filled in.
 		if (!form.getAttribute('action')) {
 			const subject = `New website enquiry from ${data.get('name')}`;
-			const body = ['name', 'email', 'business', 'service', 'message']
+			const body = ['service', 'budget', 'timeline', 'business', 'message', 'name', 'email', 'phone']
 				.map((key) => `${key}: ${data.get(key) || '-'}`)
 				.join('\n');
 			window.location.href = `mailto:${form.dataset.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-			return;
+			return celebrate(name, true);
 		}
 
-		status.textContent = 'Sending…';
+		submit.disabled = true;
+		errorBox.textContent = '';
+		submit.firstChild!.textContent = 'Sending… ';
 		try {
 			const res = await fetch(form.action, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
 			if (!res.ok) throw new Error();
-			form.reset();
-			status.textContent = '> message_sent. We’ll be in touch soon.';
+			celebrate(name, false);
 		} catch {
-			status.textContent = 'Something went wrong. Please DM us on Instagram or email us instead.';
+			errorBox.textContent = "That didn't go through. Try again, or DM us on Instagram or email us instead.";
+			submit.disabled = false;
+			submit.firstChild!.textContent = 'Send message ';
 		}
 	});
+
+	/* ---------- online now / back at ... ---------- */
+	const avail = document.querySelector<HTMLElement>('[data-availability]');
+	if (avail) {
+		const tz = avail.dataset.tz!;
+		const days = (avail.dataset.days ?? '').split(',').map(Number);
+		const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+		const open = toMin(avail.dataset.open!), close = toMin(avail.dataset.close!);
+		const label = (min: number) => new Date(2000, 0, 1, Math.floor(min / 60), min % 60).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
+		const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+		const update = () => {
+			const parts = new Intl.DateTimeFormat('en-GB', { timeZone: tz, weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+			const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
+			const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday'));
+			const now = Number(get('hour')) * 60 + Number(get('minute'));
+			const isOpen = days.includes(day) && now >= open && now < close;
+			let text = "We're online now · replies within one working day";
+			if (!isOpen) {
+				let d = day, when = '';
+				if (days.includes(day) && now < open) when = 'today';
+				else {
+					for (let k = 1; k <= 7; k++) { d = (day + k) % 7; if (days.includes(d)) break; }
+					when = d === (day + 1) % 7 ? 'tomorrow' : names[d];
+				}
+				text = `Offline now · back ${when} at ${label(open)}`;
+			}
+			avail.classList.toggle('is-open', isOpen);
+			avail.querySelector('[data-avail-text]')!.textContent = text;
+		};
+		update();
+		setInterval(update, 60_000);
+	}
+
+	/* ---------- copy email ---------- */
+	const toast = document.querySelector<HTMLElement>('[data-toast]')!;
+	let toastTimer = 0;
+	document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((b) =>
+		b.addEventListener('click', async () => {
+			try {
+				await navigator.clipboard.writeText(b.dataset.copy!);
+				toast.textContent = '> copied_to_clipboard ✓';
+			} catch {
+				toast.textContent = `Copy this: ${b.dataset.copy}`;
+			}
+			toast.classList.add('show');
+			clearTimeout(toastTimer);
+			toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2200);
+		}),
+	);
+
+	/* ---------- map lights up when it appears ---------- */
+	const map = document.querySelector('[data-map]');
+	if (map) new IntersectionObserver(([e], o) => { if (e.isIntersecting) { map.classList.add('is-in'); o.disconnect(); } }, { threshold: 0.3 }).observe(map);
 </script>
 
 <style>
-	.layout { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: start; }
-	.free { font-weight: 600; }
-	.channels { list-style: none; padding: 0; margin: 2.5rem 0 0; display: grid; gap: 0.85rem; }
-	.channel { display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem 1.5rem; transition: background 0.15s; }
-	.channel:hover { background: #222; }
-	.channel .icon { margin: 0; }
-	.channel strong { display: block; font-size: 1.1rem; }
-	.sub { display: block; color: var(--fg-2); font-size: 0.95rem; overflow-wrap: anywhere; }
+	.intro-sec { padding-bottom: 2.5rem; }
+	.trust { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; }
+	.avail { display: inline-flex; align-items: center; gap: 0.6rem; border: 1px solid var(--line); border-radius: 999px; padding: 0.5rem 1rem; font-weight: 500; }
+	.avail-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--fg-3); }
+	.avail.is-open .avail-dot { background: var(--accent); box-shadow: 0 0 0 0 rgb(163 230 53 / 0.6); animation: ping 1.6s infinite; }
+	@keyframes ping { 70% { box-shadow: 0 0 0 8px rgb(163 230 53 / 0); } 100% { box-shadow: 0 0 0 0 rgb(163 230 53 / 0); } }
 
-	.form { display: grid; gap: 1.15rem; }
-	.form h2 { font-size: 1.75rem; margin-bottom: 0.25rem; }
-	label { display: grid; gap: 0.45rem; font-weight: 500; font-size: 0.95rem; }
-	input, select, textarea {
-		font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line);
-		border-radius: 0.85rem; padding: 0.85rem 1rem; width: 100%;
+	/* Form + brief layout */
+	.form-grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 1.25rem; align-items: start; }
+	.wizard { position: relative; overflow: hidden; display: grid; gap: 1.25rem; min-height: 30rem; align-content: start; }
+	.wz-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+	.wz-progress { display: flex; gap: 0.4rem; }
+	.wz-progress i { width: 2.25rem; height: 0.55rem; background: var(--line); transition: background 0.35s; }
+	.wz-progress i.on { background: var(--accent); }
+	:global(html:not(.js)) .wz-head { display: none; }
+
+	fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 1rem; }
+	legend { font-size: clamp(1.6rem, 3vw, 2.25rem); font-weight: 700; letter-spacing: -0.035em; line-height: 1.1; padding: 0; margin-bottom: 1rem; }
+	.hint { color: var(--fg-2); margin-top: -0.5rem; }
+	.js-wizard .wz-step { display: none; }
+	.js-wizard .wz-step.is-active { display: grid; }
+
+	.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr)); gap: 0.6rem; }
+	.opt { position: relative; cursor: pointer; }
+	.opt input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+	.opt span {
+		display: flex; align-items: center; gap: 0.6rem; height: 100%; padding: 1rem 1.1rem; border-radius: 0.85rem;
+		background: var(--bg); border: 1px solid var(--line); font-weight: 500; transition: border-color 0.2s, background 0.2s, color 0.2s;
 	}
-	input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+	.opt span::before { content: ''; width: 0.75rem; height: 0.75rem; border: 1.5px solid var(--fg-3); flex: none; transition: background 0.2s, border-color 0.2s; }
+	.opt:hover span { border-color: var(--fg-3); }
+	.opt input:checked + span { border-color: var(--accent); background: rgb(163 230 53 / 0.08); }
+	.opt input:checked + span::before { background: var(--accent); border-color: var(--accent); }
+	.opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+	.field { display: grid; gap: 0.45rem; font-weight: 500; font-size: 0.95rem; }
+	.opt-tag { color: var(--fg-3); font-weight: 400; font-size: 0.85rem; }
+	input:not([type='radio']), textarea {
+		font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line);
+		border-radius: 0.85rem; padding: 0.85rem 1rem; width: 100%; transition: border-color 0.2s;
+	}
+	input::placeholder, textarea::placeholder { color: #555; }
+	input:focus, textarea:focus { outline: none; border-color: var(--accent); }
 	textarea { resize: vertical; }
-	.form .btn { justify-self: start; margin-top: 0.5rem; }
-	.status:empty { display: none; }
-	@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+	.err { display: none; color: #ff8a7a; font-size: 0.88rem; font-weight: 400; }
+	.has-err input, .has-err textarea { border-color: #ff8a7a; }
+	.has-err .err { display: block; }
+	.wz-error { color: #ff8a7a; min-height: 1.2em; margin: 0; }
+	.wz-error:empty { min-height: 0; }
+	.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+	.wz-nav { display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap; }
+	.wz-nav [data-back] { margin-right: auto; }
+	:global(html:not(.js)) .wz-nav [data-back], :global(html:not(.js)) .wz-nav [data-next] { display: none; }
+	.wz-nav [hidden] { display: none; }
+
+	.done { display: grid; gap: 1rem; align-content: start; }
+	/* Anything the script hides (steps, buttons, the success panel) must really disappear,
+	   even when another rule gives it a display value. */
+	.wizard > [hidden] { display: none !important; }
+	.done-tag { color: var(--accent); font-weight: 700; }
+	.done h2 { font-size: clamp(2rem, 4vw, 3rem); }
+	.done-text { color: var(--fg-2); font-size: 1.1rem; }
+	.next-steps { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.75rem; border-top: 1px solid var(--line); padding-top: 1.25rem; }
+	.next-steps li { display: flex; gap: 1rem; }
+	.next-steps span { font-family: var(--mono); font-weight: 700; color: var(--accent); }
+	.wizard :global(.confetti) { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 5; }
+
+	/* Live brief */
+	.brief { position: sticky; top: 6.5rem; background: #050505; border: 1px solid var(--line); border-radius: 1rem; overflow: hidden; font-family: var(--mono); font-size: 0.88rem; }
+	.term-bar { display: flex; align-items: center; gap: 0.45rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); background: #111; }
+	.term-bar i { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: #2a2a2a; }
+	.term-bar i:first-child { background: var(--accent); }
+	.term-bar span { margin-left: auto; color: var(--fg-3); font-size: 0.78rem; }
+	.brief-body { margin: 0; padding: 1.1rem 1.25rem; display: grid; gap: 0.6rem; }
+	.brief-body div { display: grid; grid-template-columns: 5.5rem 1fr; gap: 0.75rem; }
+	.brief-body dt { color: var(--accent); font-weight: 700; }
+	.brief-body dt::before { content: '> '; }
+	.brief-body dd { margin: 0; color: #555; overflow-wrap: anywhere; }
+	.brief-body dd.set { color: var(--fg); }
+	.brief-body dd.flash { animation: flash 0.6s; }
+	@keyframes flash { 0% { background: rgb(163 230 53 / 0.35); } 100% { background: transparent; } }
+	.brief-foot { padding: 0 1.25rem 1.1rem; color: var(--fg-3); }
+	.blink { color: var(--accent); animation: tblink 1s steps(1) infinite; }
+	@keyframes tblink { 50% { opacity: 0; } }
+
+	/* Channels */
+	.channels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 1.25rem; margin-top: 2.5rem; }
+	.channel { display: grid; gap: 0.4rem; align-content: start; }
+	.ch-icon { color: var(--accent); margin-bottom: 0.75rem; }
+	.channel strong { font-size: 1.25rem; letter-spacing: -0.02em; }
+	.sub { color: var(--fg-2); overflow-wrap: anywhere; }
+	.ch-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
+	.btn.sm { padding: 0.55rem 1rem; font-size: 0.9rem; }
+	.channel > .btn.sm { justify-self: start; margin-top: 0.85rem; }
+	.qr { width: 8.5rem; aspect-ratio: 1; margin-top: 0.85rem; }
+	.qr :global(svg) { width: 100%; height: 100%; }
+	.qr-ph { background: repeating-conic-gradient(#2a2a2a 0 25%, transparent 0 50%) 0 0 / 12px 12px; border-radius: 0.4rem; }
+	.slots { display: flex; gap: 0.35rem; margin-top: 0.85rem; }
+	.slots span { font-family: var(--mono); font-size: 0.75rem; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 0.35rem; color: var(--fg-2); }
+	.slots span.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+	.ph-badge { justify-self: start; margin-bottom: 0.75rem; font-family: var(--mono); font-size: 0.68rem; font-weight: 700; color: var(--accent); border: 1px dashed var(--accent); padding: 0.2rem 0.45rem; border-radius: 0.35rem; }
+
+	/* FAQ + map */
+	.alt { background: var(--bg-2); border-block: 1px solid var(--line); }
+	.faq-map { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: center; }
+	.faq { border-top: 1px solid var(--line); margin-top: 1rem; }
+	.qa { border-bottom: 1px solid var(--line); }
+	.qa summary { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; padding: 1.25rem 0; cursor: pointer; list-style: none; font-size: 1.15rem; font-weight: 600; transition: color 0.2s; }
+	.qa summary::-webkit-details-marker { display: none; }
+	.qa summary:hover { color: var(--accent); }
+	.qa p { color: var(--fg-2); padding-bottom: 1.25rem; }
+	.qa::details-content { block-size: 0; overflow: hidden; transition: block-size 0.35s cubic-bezier(0.7, 0, 0.2, 1), content-visibility 0.35s allow-discrete; }
+	.qa[open]::details-content { block-size: auto; }
+	.plus { position: relative; width: 1rem; height: 1rem; flex: none; transition: transform 0.3s; }
+	.plus::before, .plus::after { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 2px; margin-top: -1px; background: var(--accent); }
+	.plus::after { transform: rotate(90deg); }
+	.qa[open] .plus { transform: rotate(45deg); }
+
+	.map { margin: 0; display: grid; gap: 1rem; justify-items: center; }
+	.map svg { width: min(100%, 26rem); height: auto; }
+	.map rect { fill: #2a2a2a; }
+	:global(html.motion) .map rect:not(.pin):not(.pin-pulse) { fill: #161616; }
+	.map.is-in rect:not(.pin):not(.pin-pulse) { animation: land 0.5s var(--d) forwards; }
+	@keyframes land { 0% { fill: #a3e635; } 100% { fill: #2a2a2a; } }
+	.map .pin { fill: var(--accent); }
+	.map .pin-pulse { fill: none; stroke: var(--accent); stroke-width: 0.15; transform-box: fill-box; transform-origin: center; animation: pin 1.8s infinite; }
+	@keyframes pin { 0% { transform: scale(0.4); opacity: 1; } 100% { transform: scale(2.4); opacity: 0; } }
+	.map figcaption span { color: var(--accent); }
+
+	/* Toast */
+	.toast {
+		position: fixed; left: 50%; bottom: 1.5rem; z-index: 80; transform: translate(-50%, 150%);
+		background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 0.7rem 1.1rem; border-radius: 0.5rem;
+		transition: transform 0.4s cubic-bezier(0.3, 1.4, 0.5, 1);
+	}
+	.toast:empty { display: none; }
+	.toast.show { transform: translate(-50%, 0); }
+
+	@media (max-width: 900px) {
+		.form-grid, .faq-map { grid-template-columns: 1fr; }
+		.brief { position: static; }
+	}
 </style>

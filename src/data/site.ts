@@ -34,6 +34,16 @@ export const site = {
 	// Shown with a live clock in the footer. timeZone must be an IANA name, e.g. 'Asia/Kolkata'.
 	city: 'Anand, IN',
 	timeZone: 'Asia/Kolkata',
+
+	// Pin on the pixel map of India on the Contact page. TODO: set to your city.
+	geo: { lat: 22.56, lon: 72.95 },
+
+	// Drives the "online now / back at ..." status on the Contact page. Days: 0 = Sunday ... 6 = Saturday.
+	// TODO: set your real working hours (24-hour clock, in the timeZone above).
+	hours: { days: [1, 2, 3, 4, 5, 6], open: '10:00', close: '19:00' },
+
+	// TODO: paste a booking link (e.g. https://cal.com/your-name/15min or a Calendly link) to show "Book a call".
+	bookingUrl: '',
 };
 
 export const whatsappHref = site.whatsapp
