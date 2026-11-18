@@ -1,0 +1,30 @@
+---
+// Shared layout for the Privacy and Terms pages.
+import Layout from '../layouts/Layout.astro';
+interface Props { title: string; description: string; updated: string }
+const { title, description, updated } = Astro.props;
+---
+<Layout title={title} description={description}>
+	<section class="section">
+		<div class="wrap legal">
+			{import.meta.env.DEV && <p class="draft note">&gt; draft · review this text before going live (only visible in local preview)</p>}
+			<p class="kicker">legal</p>
+			<h1 data-split>{title}</h1>
+			<p class="note updated">last updated: {updated}</p>
+			<div class="prose"><slot /></div>
+		</div>
+	</section>
+</Layout>
+
+<style>
+	.legal { max-width: 46rem; }
+	.legal h1 { font-size: clamp(2.5rem, 7vw, 5rem); margin-top: 1rem; }
+	.updated { margin-top: 1rem; }
+	.draft { color: var(--accent); border: 1px dashed var(--accent); padding: 0.5rem 0.75rem; border-radius: 0.5rem; margin-bottom: 2rem; }
+	.prose { margin-top: 3rem; display: grid; gap: 1rem; color: var(--fg-2); }
+	.prose :global(h2) { font-size: 1.5rem; color: var(--fg); margin-top: 1.5rem; letter-spacing: -0.02em; }
+	.prose :global(ul) { margin: 0; padding-left: 1.25rem; display: grid; gap: 0.4rem; }
+	.prose :global(li::marker) { color: var(--accent); }
+	.prose :global(a) { color: var(--accent); border-bottom: 1px solid currentColor; }
+	.prose :global(strong) { color: var(--fg); }
+</style>

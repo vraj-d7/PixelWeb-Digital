@@ -397,6 +397,18 @@ function pixelateImages() {
 	});
 }
 
+/* ---------- footer curtain reveal ---------- */
+// The page lifts like a curtain: the footer sits underneath and rises into place more slowly than the page.
+function curtain() {
+	const footer = document.querySelector<HTMLElement>('[data-footer]');
+	const inner = footer?.querySelector<HTMLElement>('[data-footer-inner]');
+	if (!footer || !inner) return;
+	gsap.fromTo(inner, { yPercent: -14 }, {
+		yPercent: 0, ease: 'none',
+		scrollTrigger: { trigger: footer, start: 'top bottom', end: 'top 15%', scrub: true },
+	});
+}
+
 /* ---------- service rows: photo follows the cursor ---------- */
 function servicePreview() {
 	const list = document.querySelector<HTMLElement>('.svc-list');
@@ -485,7 +497,8 @@ if (motion) {
 			marquees();
 			spotlights();
 			const giant = document.querySelector<HTMLElement>('.giant-wrap');
-			if (giant) wordmark(giant);
+			if (giant) (window as any).__wordmark = wordmark(giant); // the easter egg uses its burst()
+			curtain();
 			if (finePointer) { pointerFx(); servicePreview(); }
 			const hero = heroIn().pause();
 			intro(() => { hero.play(); revealResolve(); });

@@ -44,6 +44,9 @@ export const site = {
 
 	// TODO: paste a booking link (e.g. https://cal.com/your-name/15min or a Calendly link) to show "Book a call".
 	bookingUrl: '',
+
+	// TODO: paste full profile links to show them in the footer (empty ones stay hidden).
+	socials: { linkedin: '', behance: '', dribbble: '' },
 };
 
 export const whatsappHref = site.whatsapp
@@ -57,7 +60,7 @@ export const nav = [
 	{ href: '/contact/', label: 'Contact' },
 ];
 
-export type IconName = 'monitor' | 'code' | 'cart' | 'phone' | 'search' | 'rocket' | 'arrow' | 'mail' | 'chat' | 'instagram' | 'check';
+export type IconName = 'monitor' | 'code' | 'cart' | 'phone' | 'search' | 'rocket' | 'arrow' | 'mail' | 'chat' | 'instagram' | 'check' | 'linkedin' | 'dribbble' | 'behance';
 
 export const services: { icon: IconName; title: string; short: string; body: string; points: string[]; image: ImageMetadata; imageAlt: string }[] = [
 	{

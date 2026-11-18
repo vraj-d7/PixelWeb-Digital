@@ -3,25 +3,27 @@
 // - The outline of the word is always visible underneath, so you can see it filling in.
 // - Under the mouse the pixels scatter and flicker lime, and the letter you're on jumps up.
 // - The word runs off the bottom edge of the page on purpose.
+// - Click and drag to paint pixels in the other colour; they fade back after a few seconds.
+// - burst() blows the whole word apart (used by the easter egg); it rebuilds itself.
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 const WORD = 'PixelWeb';
 const LIME = '#a3e635';
 const SPACING = -0.065; // letter spacing in em, same as the CSS version
 
-type Pixel = { hx: number; hy: number; x: number; y: number; vx: number; vy: number; li: number; th: number; on: boolean };
+type Pixel = { hx: number; hy: number; x: number; y: number; vx: number; vy: number; li: number; th: number; on: boolean; paint: number };
 
 export function wordmark(wrap: HTMLElement) {
 	const canvas = wrap.querySelector('canvas');
 	const ctx = canvas?.getContext('2d');
-	if (!canvas || !ctx) return;
+	if (!canvas || !ctx) return null;
 
 	let w = 0, h = 0, size = 0, base = 0, step = 6;
 	let parts: Pixel[] = [];
 	let letters: { x0: number; x1: number }[] = [];
 	const lift = new Float32Array(WORD.length);
 	const liftV = new Float32Array(WORD.length);
-	const mouse = { x: 0, y: 0, in: false };
+	const mouse = { x: 0, y: 0, in: false, down: false };
 	let progress = 0;
 	let raf = 0;
 	let running = false;
@@ -75,6 +77,7 @@ export function wordmark(wrap: HTMLElement) {
 					// Left pixels land first, so the word fills left to right.
 					th: 0.06 + 0.72 * (xx / w) + Math.random() * 0.14,
 					on: false,
+					paint: 0,
 				});
 			}
 		}
@@ -111,7 +114,10 @@ export function wordmark(wrap: HTMLElement) {
 			let ay = (ty - p.y) * 0.07;
 
 			let near = 0;
-			if (mouse.in) {
+			// Painting: pixels under the brush switch colour, then slowly fade back.
+			if (mouse.in && mouse.down && Math.hypot(p.x - mouse.x, p.y - mouse.y) < R * 0.7) p.paint = 1;
+			else if (p.paint > 0) p.paint -= 0.004;
+			if (mouse.in && !mouse.down) {
 				const dx = p.x - mouse.x, dy = p.y - mouse.y;
 				const d = Math.hypot(dx, dy);
 				if (d < R && d > 0.01) {
@@ -129,7 +135,8 @@ export function wordmark(wrap: HTMLElement) {
 
 			const lime = p.li >= 5; // "Web"
 			let color = lime ? LIME : '#fff';
-			if (p.li === hovered) color = lime ? '#fff' : LIME; // hovered letter swaps colour
+			if (p.li === hovered && !mouse.down) color = lime ? '#fff' : LIME; // hovered letter swaps colour
+			if (p.paint > 0) color = lime ? '#fff' : LIME;
 			if (near > 0 && Math.random() < 0.35 * near) color = Math.random() < 0.5 ? LIME : '#0b0b0b';
 			const s = near > 0 ? s0 * (0.6 + Math.random() * 0.8) : s0;
 			ctx!.fillStyle = color;
@@ -149,13 +156,20 @@ export function wordmark(wrap: HTMLElement) {
 		const r = canvas.getBoundingClientRect();
 		mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; mouse.in = true;
 	});
-	wrap.addEventListener('pointerleave', () => void (mouse.in = false));
+	wrap.addEventListener('pointerleave', () => { mouse.in = false; mouse.down = false; });
+	wrap.addEventListener('pointerdown', (e) => {
+		if (e.pointerType !== 'mouse' || e.button !== 0) return;
+		e.preventDefault(); // no text selection while painting
+		mouse.down = true;
+	});
+	addEventListener('pointerup', () => void (mouse.down = false));
 	// On touch screens a tap makes the letter jump and the pixels scatter for a moment.
 	let tapTimer = 0;
 	wrap.addEventListener('pointerdown', (e) => {
 		if (e.pointerType === 'mouse') return;
 		const r = canvas.getBoundingClientRect();
 		mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; mouse.in = true;
+		parts.forEach((p) => { if (Math.hypot(p.x - mouse.x, p.y - mouse.y) < size * 0.18) p.paint = 1; });
 		clearTimeout(tapTimer);
 		tapTimer = window.setTimeout(() => void (mouse.in = false), 700);
 	});
@@ -171,4 +185,18 @@ export function wordmark(wrap: HTMLElement) {
 	});
 	new ResizeObserver(() => build()).observe(wrap);
 	new IntersectionObserver(([e]) => setRunning(e.isIntersecting)).observe(wrap);
+
+	return {
+		// Blow every pixel outward from the centre; the springs pull them back into the word.
+		burst() {
+			parts.forEach((p) => {
+				const dx = p.x - w / 2, dy = p.y - h;
+				const d = Math.hypot(dx, dy) || 1;
+				const f = 18 + Math.random() * 30;
+				p.vx += (dx / d) * f + (Math.random() - 0.5) * 12;
+				p.vy += (dy / d) * f - Math.random() * 16;
+				p.paint = 1;
+			});
+		},
+	};
 }

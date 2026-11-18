@@ -1,57 +1,105 @@
 ---
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
-import { nav, site, whatsappHref } from '../data/site';
+import Marquee from './Marquee.astro';
+import type { IconName } from '../data/site';
+import { nav, services, site, whatsappHref } from '../data/site';
+import { serviceExtras } from '../data/services';
 const year = new Date().getFullYear();
+
+// The big call to action changes depending on the page you're on.
+const path = Astro.url.pathname.replace(/\/?$/, '/');
+const ctas: Record<string, { kicker: string; text: string; href: string }> = {
+	'/services/': { kicker: 'ready to pick a package?', text: 'Get a quote', href: '/contact/' },
+	'/about/': { kicker: 'like how we work?', text: "Let's talk", href: '/contact/' },
+	'/contact/': { kicker: 'prefer plain email?', text: 'Say hello', href: `mailto:${site.email}` },
+};
+const cta = ctas[path] ?? { kicker: 'got a project in mind?', text: "Let's talk", href: '/contact/' };
+
+const serviceLinks = services.map((s, i) => ({ label: s.title, href: `/services/#${serviceExtras[i].id}` }));
+const moreLinks = [
+	{ label: 'Packages', href: '/services/#packages' },
+	{ label: 'FAQ', href: '/about/#faq' },
+];
+
+// Social links: only the ones that are filled in show up.
+const socials = ([
+	{ name: 'Instagram', href: site.instagram.href, icon: 'instagram' },
+	{ name: 'WhatsApp', href: whatsappHref, icon: 'chat' },
+	{ name: 'LinkedIn', href: site.socials.linkedin, icon: 'linkedin' },
+	{ name: 'Behance', href: site.socials.behance, icon: 'behance' },
+	{ name: 'Dribbble', href: site.socials.dribbble, icon: 'dribbble' },
+] as { name: string; href: string; icon: IconName }[]).filter((s) => s.href);
 ---
-<footer class="footer">
-	<div class="wrap talk-block">
-		<p class="kicker">got a project in mind?</p>
-		<a class="talk" href="/contact/">
-			<span class="talk-text">Let's talk</span>
-			<span class="talk-arrow" data-magnetic><Icon name="arrow" size={40} /></span>
-		</a>
-		<div class="talk-links">
-			<a href={`mailto:${site.email}`}>{site.email}</a>
-			<a href={site.instagram.href} target="_blank" rel="noopener">{site.instagram.handle}</a>
-			{whatsappHref && <a href={whatsappHref} target="_blank" rel="noopener">WhatsApp</a>}
+<footer class="footer" data-footer>
+	<div class="footer-inner" data-footer-inner>
+		<div class="wrap talk-block">
+			<p class="kicker">{cta.kicker}</p>
+			<a class="talk" href={cta.href}>
+				<span class="talk-text">{cta.text}</span>
+				<span class="talk-arrow" data-magnetic><Icon name="arrow" size={40} /></span>
+			</a>
+			<div class="talk-links">
+				<a href={`mailto:${site.email}`}>{site.email}</a>
+				<a href={site.instagram.href} target="_blank" rel="noopener">{site.instagram.handle}</a>
+				{whatsappHref && <a href={whatsappHref} target="_blank" rel="noopener">WhatsApp</a>}
+			</div>
 		</div>
-	</div>
 
-	<div class="wrap cols">
-		<div class="stack brand">
-			<Logo />
-			<p>We design and develop websites for small businesses, startups and personal brands.</p>
+		<div class="wrap cols">
+			<div class="brand">
+				<button type="button" class="logo-btn" data-egg-logo aria-label="PixelWeb Digital"><Logo /></button>
+				<p>We design and develop websites for small businesses, startups and personal brands.</p>
+				<ul class="socials" aria-label="Social links">
+					{socials.map((s) => (
+						<li><a href={s.href} target="_blank" rel="noopener" aria-label={s.name}><Icon name={s.icon} size={20} /></a></li>
+					))}
+				</ul>
+			</div>
+			<details class="fcol" open data-fcol>
+				<summary class="kicker">pages</summary>
+				<ul>{nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}</ul>
+			</details>
+			<details class="fcol" open data-fcol>
+				<summary class="kicker">services</summary>
+				<ul>
+					{serviceLinks.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+					{moreLinks.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+				</ul>
+			</details>
+			<details class="fcol" open data-fcol>
+				<summary class="kicker">say hello</summary>
+				<ul>
+					<li><a href={site.instagram.href} target="_blank" rel="noopener">{site.instagram.handle}</a></li>
+					<li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+					{whatsappHref && <li><a href={whatsappHref} target="_blank" rel="noopener">WhatsApp</a></li>}
+					<li><a href="/contact/">Contact form</a></li>
+				</ul>
+			</details>
 		</div>
-		<div>
-			<p class="kicker">pages</p>
-			<ul>{nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}</ul>
-		</div>
-		<div>
-			<p class="kicker">say hello</p>
-			<ul>
-				<li><a href={site.instagram.href} target="_blank" rel="noopener">{site.instagram.handle}</a></li>
-				<li><a href={`mailto:${site.email}`}>{site.email}</a></li>
-				{whatsappHref && <li><a href={whatsappHref} target="_blank" rel="noopener">WhatsApp</a></li>}
-			</ul>
-		</div>
-	</div>
 
-	<div class="wrap bar note">
-		<span>© {year} PixelWeb Digital</span>
-		<span>{site.city} · <span class="clock" data-clock data-tz={site.timeZone}>--:--</span></span>
-		<span><i class="live" aria-hidden="true"></i>taking_new_projects</span>
-		<button class="to-top" type="button" data-top aria-label="Back to top"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" /></svg></button>
-	</div>
+		<div class="wrap bar note">
+			<span class="legal">© {year} PixelWeb Digital · <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a></span>
+			<span>{site.city} · <span class="clock" data-clock data-tz={site.timeZone}>--:--</span></span>
+			<span class="speed" title="Measured in your browser just now">&gt; page_loaded_in <span data-load-time>…</span></span>
+			<span><i class="live" aria-hidden="true"></i>taking_new_projects</span>
+			<button class="to-top" type="button" data-top aria-label="Back to top"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" /></svg></button>
+		</div>
 
-	<!-- Pixel wordmark: the canvas takes over when animations run (src/scripts/wordmark.ts); the text is the fallback. -->
-	<div class="giant-wrap" aria-hidden="true">
-		<canvas></canvas>
-		<p class="giant">Pixel<span class="accent">Web</span></p>
+		<Marquee items={['available for new projects', "let's build something", 'free consultation', 'replies within one working day']} label="Availability" single small />
+
+		<!-- Pixel wordmark: the canvas takes over when animations run (src/scripts/wordmark.ts); the text is the fallback. -->
+		<div class="giant-wrap" aria-hidden="true">
+			<canvas></canvas>
+			<p class="giant">Pixel<span class="accent">Web</span></p>
+		</div>
+		<p class="wm-hint note" aria-hidden="true">&gt; click and drag to paint</p>
 	</div>
 </footer>
 
 <script>
+	import { watchForEgg } from '../scripts/egg';
+
 	// Live clock in the footer bar.
 	const clock = document.querySelector<HTMLElement>('[data-clock]');
 	if (clock) {
@@ -60,29 +108,43 @@ const year = new Date().getFullYear();
 		tick();
 		setInterval(tick, 1000);
 	}
+
+	// Real page load time, measured in this visitor's browser.
+	const loadEl = document.querySelector<HTMLElement>('[data-load-time]');
+	const showLoad = () => {
+		const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+		const ms = nav ? (nav.loadEventEnd > 0 ? nav.loadEventEnd : nav.domContentLoadedEventEnd) : 0;
+		if (loadEl && ms > 0) loadEl.textContent = `${(ms / 1000).toFixed(2)}s`;
+	};
+	if (document.readyState === 'complete') setTimeout(showLoad, 0);
+	else addEventListener('load', () => setTimeout(showLoad, 0));
+
 	// Back to top: smooth-scroll with Lenis when it's running, otherwise the browser's own smooth scroll.
 	document.querySelector('[data-top]')?.addEventListener('click', () => {
 		const lenis = (window as any).__lenis;
 		if (lenis) lenis.scrollTo(0, { duration: 1.6 });
 		else window.scrollTo({ top: 0, behavior: 'smooth' });
 	});
+
+	// Link columns fold into tap-to-open sections on phones, and are always open on bigger screens.
+	const cols = [...document.querySelectorAll<HTMLDetailsElement>('[data-fcol]')];
+	const small = matchMedia('(max-width: 640px)');
+	const setCols = () => cols.forEach((c) => (c.open = !small.matches));
+	setCols();
+	small.addEventListener('change', setCols);
+
+	// Easter egg: type "pixel", enter the Konami code, or tap the footer logo 5 times.
+	watchForEgg(document.querySelector('[data-egg-logo]'));
 </script>
 
 <style>
-	.footer { border-top: 1px solid var(--line); padding-top: clamp(4rem, 9vw, 7rem); margin-top: clamp(3.5rem, 8vw, 6rem); overflow: hidden; }
+	.footer { position: relative; z-index: 0; background: #070707; margin-top: -2rem; padding-top: calc(clamp(4rem, 9vw, 7rem) + 2rem); overflow: hidden; }
 
 	/* Closing call to action */
 	.talk-block { display: grid; gap: 1.25rem; justify-items: start; padding-bottom: clamp(3.5rem, 8vw, 6rem); border-bottom: 1px solid var(--line); margin-bottom: 4rem; }
 	.talk { display: inline-flex; align-items: center; gap: clamp(1rem, 3vw, 2rem); }
-	.talk-text {
-		font-size: clamp(3.25rem, 11vw, 9rem); font-weight: 700; letter-spacing: -0.055em; line-height: 0.95;
-		transition: color 0.35s, transform 0.5s cubic-bezier(0.7, 0, 0.2, 1);
-	}
-	.talk-arrow {
-		width: clamp(4rem, 9vw, 7.5rem); aspect-ratio: 1; border-radius: 50%; flex: none;
-		display: grid; place-items: center; background: var(--accent); color: var(--accent-ink);
-		transition: background 0.3s;
-	}
+	.talk-text { font-size: clamp(3.25rem, 11vw, 9rem); font-weight: 700; letter-spacing: -0.055em; line-height: 0.95; transition: color 0.35s, transform 0.5s cubic-bezier(0.7, 0, 0.2, 1); }
+	.talk-arrow { width: clamp(4rem, 9vw, 7.5rem); aspect-ratio: 1; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); }
 	.talk-arrow :global(svg) { width: 45%; height: 45%; transition: transform 0.5s cubic-bezier(0.7, 0, 0.2, 1); }
 	.talk:hover .talk-text { color: var(--accent); transform: translateX(0.5rem); }
 	.talk:hover .talk-arrow :global(svg) { transform: rotate(-45deg); }
@@ -92,43 +154,68 @@ const year = new Date().getFullYear();
 	.talk-links a:hover { color: var(--accent); }
 	.talk-links a:hover::after { transform: scaleX(1); transform-origin: left; }
 
-	.cols { display: grid; gap: 2.5rem; grid-template-columns: 2fr 1fr 1fr; }
+	/* Columns */
+	.cols { display: grid; gap: 2.5rem; grid-template-columns: 1.6fr 1fr 1.2fr 1.2fr; }
+	.brand { display: grid; gap: 1.25rem; align-content: start; }
 	.brand p { color: var(--fg-2); max-width: 22rem; }
-	ul { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.6rem; }
-	ul a { color: var(--fg-2); transition: color 0.15s; overflow-wrap: anywhere; }
-	ul a:hover { color: var(--accent); }
-
-	/* Live details bar */
-	.bar {
-		display: flex; align-items: center; justify-content: space-between; gap: 1rem 2rem; flex-wrap: wrap;
-		padding-block: 1.5rem; margin-top: 4rem; border-top: 1px solid var(--line);
+	.logo-btn { background: none; border: 0; padding: 0; cursor: pointer; justify-self: start; color: inherit; font: inherit; }
+	.socials { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+	.socials a {
+		position: relative; width: 2.75rem; height: 2.75rem; display: grid; place-items: center; color: var(--fg-2);
+		border: 1px solid var(--line); overflow: hidden; isolation: isolate; transition: color 0.25s, border-color 0.25s;
 	}
+	/* Pixel fill on hover: a checkerboard of lime squares sweeps in */
+	.socials a::before {
+		content: ''; position: absolute; inset: 0; z-index: -1;
+		background: conic-gradient(var(--accent) 25%, transparent 0 50%, var(--accent) 0 75%, transparent 0) 0 0 / 8px 8px, var(--accent);
+		transform: translateY(101%); transition: transform 0.35s steps(4);
+	}
+	.socials a:hover { color: var(--accent-ink); border-color: var(--accent); }
+	.socials a:hover::before { transform: none; }
+
+	.fcol summary { list-style: none; cursor: default; pointer-events: none; }
+	.fcol summary::-webkit-details-marker { display: none; }
+	ul { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.6rem; }
+	.fcol ul a, .talk-links a { color: var(--fg-2); }
+	.fcol ul a { transition: color 0.15s; overflow-wrap: anywhere; }
+	.fcol ul a:hover { color: var(--accent); }
+
+	/* Live bar */
+	.bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem 2rem; flex-wrap: wrap; padding-block: 1.5rem; margin-top: 4rem; border-top: 1px solid var(--line); }
+	.legal a { color: var(--fg-2); transition: color 0.2s; }
+	.legal a:hover { color: var(--accent); }
 	.clock { color: var(--fg); font-variant-numeric: tabular-nums; }
+	.speed span { color: var(--accent); font-variant-numeric: tabular-nums; }
 	.live { display: inline-block; width: 8px; height: 8px; background: var(--accent); margin-right: 0.6rem; animation: live-blink 1.4s steps(1) infinite; }
 	@keyframes live-blink { 50% { opacity: 0; } }
-	.to-top {
-		width: 2.75rem; height: 2.75rem; display: grid; place-items: center; cursor: pointer;
-		background: transparent; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 0;
-		transition: background 0.25s, color 0.25s;
-	}
+	.to-top { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; cursor: pointer; background: transparent; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 0; transition: background 0.25s, color 0.25s; }
 	.to-top:hover { background: var(--accent); color: var(--accent-ink); }
 	.to-top:hover svg { animation: up 0.6s ease-in-out infinite alternate; }
 	@keyframes up { to { transform: translateY(-3px); } }
 
-	/* Wordmark: runs off the bottom edge on purpose */
-	.giant-wrap { position: relative; margin-top: 1rem; }
+	/* Wordmark */
+	.giant-wrap { position: relative; margin-top: 1rem; cursor: crosshair; touch-action: pan-y; }
 	.giant-wrap canvas { display: none; width: 100%; }
 	.giant-wrap.is-canvas canvas { display: block; }
 	.giant-wrap.is-canvas .giant { display: none; }
-	.giant {
-		font-size: 22.5vw; font-weight: 700; letter-spacing: -0.065em; line-height: 0.78;
-		text-align: center; margin: 0 0 -0.12em; white-space: nowrap; user-select: none;
-	}
+	.giant { font-size: 22.5vw; font-weight: 700; letter-spacing: -0.065em; line-height: 0.78; text-align: center; margin: 0 0 -0.12em; white-space: nowrap; user-select: none; }
+	.wm-hint { position: absolute; right: 1.25rem; bottom: 1rem; z-index: 2; margin: 0; color: var(--fg-3); pointer-events: none; }
+	:global(html:not(.motion)) .wm-hint { display: none; }
 
-	@media (max-width: 760px) {
-		.cols { grid-template-columns: 1fr 1fr; }
-		.brand { grid-column: 1 / -1; }
-		.bar { justify-content: flex-start; }
-		.to-top { margin-left: auto; }
+	@media (max-width: 900px) { .cols { grid-template-columns: 1fr 1fr; } .brand { grid-column: 1 / -1; } }
+	@media (max-width: 640px) {
+		.cols { grid-template-columns: 1fr; gap: 0; }
+		.brand { margin-bottom: 1.5rem; }
+		.fcol { border-top: 1px solid var(--line); }
+		.fcol:last-of-type { border-bottom: 1px solid var(--line); }
+		.fcol summary { pointer-events: auto; cursor: pointer; display: flex; align-items: center; gap: 0.4em; padding: 1.1rem 0; }
+		.fcol summary::after { content: '+'; margin-left: auto; color: var(--accent); font-size: 1.4rem; line-height: 1; transition: transform 0.3s; }
+		.fcol[open] summary::after { transform: rotate(45deg); }
+		.fcol ul { margin: 0 0 1.25rem; gap: 0; }
+		.fcol ul a { display: block; padding: 0.6rem 0; }
+		.bar { justify-content: flex-start; gap: 0.85rem 1.5rem; }
+		.to-top { margin-left: auto; width: 3rem; height: 3rem; }
+		.giant-wrap { margin-top: 2rem; }
+		.wm-hint { display: none; }
 	}
 </style>

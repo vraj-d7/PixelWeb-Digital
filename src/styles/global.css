@@ -121,3 +121,21 @@ html:not(.motion) .progress { display: none; }
 
 /* SplitText line masks shouldn't clip descenders */
 .line-mask, [data-split] > div { padding-bottom: 0.08em; margin-bottom: -0.08em; }
+
+/* ---------- footer curtain ---------- */
+/* The page sits on top of the footer with rounded bottom corners, like a sheet being lifted. */
+main {
+	position: relative; z-index: 1; background-color: inherit;
+	border-radius: 0 0 2rem 2rem; padding-bottom: clamp(3.5rem, 8vw, 6rem);
+	box-shadow: 0 40px 80px rgb(0 0 0 / 0.6);
+}
+
+/* ---------- easter egg: pixel snake ---------- */
+.snake { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 1rem; background: rgb(0 0 0 / 0.75); backdrop-filter: blur(6px); }
+.snake-box { width: min(100%, 360px); background: #0b0b0b; border: 1px solid var(--accent); border-radius: 1rem; padding: 1rem; display: grid; gap: 0.75rem; box-shadow: 0 30px 80px rgb(0 0 0 / 0.6); }
+.snake-top { display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-weight: 700; font-size: 0.8rem; color: var(--accent); }
+.snake-x { background: none; border: 1px solid var(--line); color: var(--fg); width: 2rem; height: 2rem; font-size: 1.2rem; line-height: 1; cursor: pointer; }
+.snake-x:hover { border-color: var(--accent); color: var(--accent); }
+.snake canvas { width: 100%; height: auto; aspect-ratio: 1; display: block; border-radius: 0.5rem; touch-action: none; image-rendering: pixelated; }
+.snake-info { margin: 0; font-family: var(--mono); font-size: 0.75rem; color: var(--fg-3); }
+.snake-info b { color: var(--fg); }

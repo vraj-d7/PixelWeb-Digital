@@ -1,0 +1,30 @@
+---
+// TODO: this is a plain-English draft for the website itself. It is not legal advice and it is not a client
+// contract: project terms (scope, payment, ownership) belong in your quote or agreement with each client.
+import Legal from '../components/Legal.astro';
+import { site } from '../data/site';
+---
+<Legal title="Terms of use" description="The basic terms for using the PixelWeb Digital website." updated="19 November 2026">
+	<p>These terms cover your use of this website. By using it, you agree to them. They're short on purpose.</p>
+
+	<h2>Using this site</h2>
+	<p>You're welcome to browse, share links to our pages and contact us. Please don't misuse the site, for example by trying to break it, overload it or send spam through the contact form.</p>
+
+	<h2>Our content</h2>
+	<p>The design, text, graphics and code on this website belong to {site.name} unless stated otherwise. Some photos are free images from <a href="https://unsplash.com/license" target="_blank" rel="noopener">Unsplash</a>. Please don't copy our content to present it as your own.</p>
+
+	<h2>Examples and concepts</h2>
+	<p>Some projects and demos on this site are concept examples made to show what we can build. They're labelled as concepts and aren't client work.</p>
+
+	<h2>Prices and information</h2>
+	<p>We try to keep everything on the site accurate and up to date. Anything we show about packages, timings or pricing is a general guide. Your actual quote and terms are confirmed with you directly before any work starts.</p>
+
+	<h2>Links to other sites</h2>
+	<p>We link to other services such as Instagram, WhatsApp and booking tools. We're not responsible for their content or how they work.</p>
+
+	<h2>Liability</h2>
+	<p>We provide this website as it is. We're not liable for any loss caused by relying on general information on the site, to the extent the law allows.</p>
+
+	<h2>Questions</h2>
+	<p>Email <a href={`mailto:${site.email}`}>{site.email}</a> and we'll be happy to help.</p>
+</Legal>

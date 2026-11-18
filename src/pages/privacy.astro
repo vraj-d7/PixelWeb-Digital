@@ -1,0 +1,40 @@
+---
+// TODO: this is a plain-English draft based on how the site works today. It is not legal advice.
+// Review it (ideally with a professional) and update it if you add analytics, ads or new tools.
+import Legal from '../components/Legal.astro';
+import { site } from '../data/site';
+---
+<Legal title="Privacy policy" description="How PixelWeb Digital handles the information you share through this website." updated="19 November 2026">
+	<p>This policy explains what information {site.name} ("we", "us") collects through this website, why, and what you can ask us to do with it. We keep it short and in plain language.</p>
+
+	<h2>What we collect</h2>
+	<p>We only collect what you choose to send us through the contact form or by messaging us:</p>
+	<ul>
+		<li>your name, email address and, if you add it, your phone or WhatsApp number</li>
+		<li>your business name and what you tell us about your project</li>
+		<li>the choices you make in the form, such as service, budget and timeline</li>
+	</ul>
+	<p>If you contact us on Instagram, WhatsApp or by email instead, we receive whatever you send there.</p>
+
+	<h2>What we use it for</h2>
+	<ul>
+		<li>to reply to your enquiry and talk about your project</li>
+		<li>to prepare a plan and quote if you ask for one</li>
+	</ul>
+	<p>We don't sell your information, and we don't add you to marketing lists without asking.</p>
+
+	<h2>Services that help us</h2>
+	<p>When the contact form is connected to a form service (such as Formspree), your message passes through that service so it can reach our inbox. If you use Instagram, WhatsApp or a booking tool to reach us, those companies' own privacy policies apply to what you send there.</p>
+
+	<h2>Cookies and tracking</h2>
+	<p>This website doesn't use advertising or analytics cookies. It stores one small note in your browser's session storage so the intro animation only plays once per visit; it's deleted when you close the tab. If you find and play the hidden game, your best score is saved in your browser's local storage. None of this is sent to us.</p>
+
+	<h2>How long we keep it</h2>
+	<p>We keep your messages for as long as we need them to deal with your enquiry or project, and for a reasonable time after in case you come back to us. Ask us any time and we'll delete them.</p>
+
+	<h2>Your choices</h2>
+	<p>You can ask us to show you, correct or delete the information we hold about you. Email <a href={`mailto:${site.email}`}>{site.email}</a> and we'll take care of it.</p>
+
+	<h2>Changes</h2>
+	<p>If we change how we handle information, we'll update this page and the date at the top.</p>
+</Legal>
