@@ -9,6 +9,14 @@ import { site } from './site';
 export const story =
 	"Most small businesses don't need a bigger website. They need one that looks sharp, loads fast and brings in customers, built by people who actually answer their messages. That's PixelWeb: one team from the first sketch to launch day, and the support after.";
 
+// The four promises, shown on About and as stacking cards on the home page.
+export const values = [
+	{ title: 'One team, start to finish', body: 'The people who design your site are the people who build it. No handoffs, nothing lost in translation.' },
+	{ title: 'Plain talk, no jargon', body: 'You get clear updates and straight answers. You never need to know what a DNS record is.' },
+	{ title: 'Built to bring customers', body: 'Pretty is the minimum. Every page is planned around getting visitors to call, book or buy.' },
+	{ title: 'We stick around', body: 'Launch is not goodbye. We test everything and support your site after it goes live.' },
+];
+
 // Typed out line by line in the terminal card at the top of the page.
 export const terminal: [string, string][] = [
 	['whoami', site.name],

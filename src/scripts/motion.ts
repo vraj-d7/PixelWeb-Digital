@@ -8,6 +8,7 @@ import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 import { pixelField } from './pixel-field';
 import { wordmark } from './wordmark';
+import { homeFx } from './home';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -125,6 +126,16 @@ function heroIn() {
 		const split = SplitText.create(title, { type: 'lines,chars', mask: 'lines' });
 		title.style.visibility = 'visible';
 		tl.from(split.chars, { yPercent: 115, rotate: 6, duration: 1.1, ease, stagger: 0.025 }, 0);
+		// Each letter decodes from random terminal glyphs as it rises into place.
+		split.chars.forEach((c, i) => {
+			const real = c.textContent ?? '';
+			const s = { t: 0 };
+			tl.to(s, {
+				t: 1, duration: 0.55, ease: 'none',
+				onUpdate: () => void (c.textContent = s.t < 1 ? GLYPHS[Math.floor(Math.random() * GLYPHS.length)] : real),
+				onComplete: () => void (c.textContent = real),
+			}, i * 0.025);
+		});
 	}
 	document.querySelectorAll<HTMLElement>('[data-type]').forEach((el) => {
 		const text = el.dataset.type || '';
@@ -265,6 +276,10 @@ function pointerFx() {
 		gsap.to(cursor, { opacity: 1, duration: 0.3, overwrite: 'auto' });
 		const hot = (e.target as Element).closest('a, button, label, select, input, textarea');
 		cursor.classList.toggle('is-hot', !!hot);
+		// Elements with data-cursor="..." turn the cursor into a lime label (e.g. "concept" on work cards).
+		const label = (e.target as Element).closest<HTMLElement>('[data-cursor]')?.dataset.cursor ?? '';
+		cursor.classList.toggle('is-label', !!label);
+		if (cursor.dataset.label !== label) cursor.dataset.label = label;
 	});
 	document.addEventListener('pointerleave', () => gsap.to(cursor, { opacity: 0, duration: 0.3 }));
 }
@@ -461,6 +476,7 @@ if (motion) {
 			smoothScroll();
 			pageTransitions();
 			processPin(); // pins first, so triggers further down the page are measured after the pin spacing
+			homeFx();
 			textReveals();
 			terminalTyping();
 			countUps();

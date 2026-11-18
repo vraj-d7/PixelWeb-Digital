@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Icon from '../components/Icon.astro';
 import Marquee from '../components/Marquee.astro';
 import { getImage } from 'astro:assets';
-import { faq, process, stats, story, team, terminal, testimonials, timeline, tools } from '../data/about';
+import { faq, process, stats, story, team, terminal, testimonials, timeline, tools, values } from '../data/about';
 
 // Placeholder entries only show while previewing locally, never on the live site.
 const dev = import.meta.env.DEV;
@@ -11,12 +11,6 @@ const people = team.filter((m) => dev || !m.placeholder);
 const quotes = testimonials.filter((t) => dev || !t.placeholder);
 const photos = await Promise.all(people.map((m) => (m.photo ? getImage({ src: m.photo, width: 640, format: 'webp', quality: 78 }) : null)));
 
-const values = [
-	{ title: 'One team, start to finish', body: 'The people who design your site are the people who build it. No handoffs, nothing lost in translation.' },
-	{ title: 'Plain talk, no jargon', body: 'You get clear updates and straight answers. You never need to know what a DNS record is.' },
-	{ title: 'Built to bring customers', body: 'Pretty is the minimum. Every page is planned around getting visitors to call, book or buy.' },
-	{ title: 'We stick around', body: 'Launch is not goodbye. We test everything and support your site after it goes live.' },
-];
 
 // Pixel "?" used as the avatar for people without a photo yet.
 const qmark = ['..####..', '.##..##.', '.....##.', '....##..', '...##...', '...##...', '........', '...##...'];
@@ -92,7 +86,7 @@ const qcells = qmark.flatMap((row, y) => [...row].map((c, x) => (c === '#' ? [x,
 	)}
 
 	<!-- Pinned process -->
-	<section class="process" data-process>
+	<section class="process" id="process" data-process>
 		<div class="wrap process-grid">
 			<div class="process-text">
 				<p class="kicker">how we work</p>

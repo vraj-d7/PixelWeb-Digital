@@ -24,6 +24,7 @@ export function pixelField(canvas: HTMLCanvasElement, animate: boolean) {
 	const pointer = { x: 0, y: 0, active: false };
 	const cur = { x: 0, y: 0 };
 	const par = { x: 0, y: 0 };
+	const tilt = { x: 0, y: 0 }; // fake 3D turn of the logo towards the mouse
 	const ripples: { x: number; y: number; t: number }[] = [];
 	let running = false;
 	let raf = 0;
@@ -167,6 +168,11 @@ export function pixelField(canvas: HTMLCanvasElement, animate: boolean) {
 		const pty = pointer.active ? (pointer.y / h - 0.5) * -18 : 0;
 		par.x += (ptx - par.x) * 0.06;
 		par.y += (pty - par.y) * 0.06;
+		// Turn towards the mouse; drift slowly by itself when there's no mouse.
+		const ttx = pointer.active ? pointer.x / w - 0.5 : Math.sin(t * 0.0005) * 0.25;
+		const tty = pointer.active ? pointer.y / h - 0.5 : Math.cos(t * 0.0004) * 0.2;
+		tilt.x += (ttx - tilt.x) * 0.05;
+		tilt.y += (tty - tilt.y) * 0.05;
 
 		const mx = pointer.active ? pointer.x : -1e5;
 		const my = pointer.active ? pointer.y : -1e5;
@@ -208,8 +214,11 @@ export function pixelField(canvas: HTMLCanvasElement, animate: boolean) {
 			} else {
 				ctx!.fillStyle = '#fff';
 			}
-			const s = ps * (1 - off * 0.25);
-			ctx!.fillRect(p.x - s / 2, p.y - s / 2, s, s);
+			// Perspective: pixels on the side nearest the mouse are drawn bigger and pushed outward.
+			const rx = p.x - logo.cx, ry = p.y - logo.cy;
+			const persp = 1 + (rx * tilt.x + ry * tilt.y) / (logo.size * 1.4);
+			const s = ps * (1 - off * 0.25) * persp;
+			ctx!.fillRect(logo.cx + rx * persp - s / 2, logo.cy + ry * persp - s / 2, s, s);
 		}
 	}
 

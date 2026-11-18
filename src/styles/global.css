@@ -97,6 +97,11 @@ html:not(.motion) .progress { display: none; }
 	mix-blend-mode: difference;
 }
 .cursor.is-hot { width: 64px; height: 64px; background: rgb(163 230 53 / 0.18); }
+.cursor.is-label { width: 96px; height: 96px; background: var(--accent); mix-blend-mode: normal; display: grid; place-items: center; }
+.cursor.is-label::after {
+	content: attr(data-label); font-family: var(--mono); font-weight: 700; font-size: 0.8rem;
+	color: var(--accent-ink); text-align: center; padding: 0 0.4rem;
+}
 
 /* Pointer-following glow on cards */
 [data-spot] { position: relative; isolation: isolate; overflow: hidden; }
