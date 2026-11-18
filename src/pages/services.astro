@@ -1,47 +1,619 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Icon from '../components/Icon.astro';
+import { getImage } from 'astro:assets';
 import { services } from '../data/site';
+import { features, needs, packages, serviceExtras } from '../data/services';
+
+const photos = await Promise.all(services.map((s) => getImage({ src: s.image, width: 900, format: 'webp', quality: 72 })));
+const ctas = ['Start a design project', 'Start a development project', 'Start your online store', 'Make my site faster', 'Get found on Google'];
+const items = services.map((s, i) => ({ ...s, ...serviceExtras[i], photo: photos[i], cta: ctas[i] }));
+const contactFor = (title: string) => `/contact/?service=${encodeURIComponent(title)}`;
 ---
 <Layout title="Services" description="Website design, web development, e-commerce stores, mobile-friendly builds and SEO from PixelWeb Digital.">
+	<!-- Header + "what do you need?" picker -->
 	<section class="section page-head">
 		<div class="wrap stack">
 			<p class="kicker">what we do</p>
 			<h1 data-split>Everything you need <span class="accent">online.</span></h1>
 			<p class="lead" data-reveal>From a simple one-page site to a full online store, we handle the design, the code and the launch.</p>
+			<div class="picker" data-reveal data-picker>
+				<p class="note">&gt; what do you need?</p>
+				<div class="chips">
+					{needs.map((n, i) => (
+						<button type="button" class="chip" data-need={i} data-services={n.services.join(',')} data-pkg={n.pkg} aria-pressed="false">{n.label}</button>
+					))}
+				</div>
+				<p class="suggest" data-suggest hidden>
+					We'd suggest: <a href="#packages" data-suggest-link></a> · <button type="button" class="clear" data-clear>clear</button>
+				</p>
+			</div>
 		</div>
 	</section>
 
-	<section class="wrap list">
-		{services.map((s, i) => (
-			<article class="card row" data-reveal data-spot>
-				<div class="head">
-					<span class="icon"><Icon name={s.icon} size={40} /></span>
-					<span class="note">0{i + 1} / 0{services.length}</span>
-				</div>
-				<div class="body">
-					<h2>{s.title}</h2>
-					<p class="desc">{s.body}</p>
-					<ul>
-						{s.points.map((p) => <li><Icon name="check" size={20} /> {p}</li>)}
-					</ul>
-				</div>
-			</article>
-		))}
+	<!-- Services with sticky menu -->
+	<section class="wrap svc-layout">
+		<nav class="svc-nav" aria-label="Services">
+			<ol>
+				{items.map((s, i) => (
+					<li><a href={`#${s.id}`} data-nav={s.id} class={i === 0 ? 'is-active' : ''}><span class="nn">0{i + 1}</span>{s.title}</a></li>
+				))}
+			</ol>
+		</nav>
+
+		<div class="svc-blocks">
+			{items.map((s, i) => (
+				<article class="sblock" id={s.id} data-svc={s.id}>
+					<div class="sb-media">
+						<div class="sb-photo" data-pixelate-host>
+							<img src={s.photo.src} alt={s.imageAlt} width="900" height="675" loading="lazy" data-pixelate />
+						</div>
+
+						{s.demo === 'design' && (
+							<div class="demo d-design" data-demo="design" aria-hidden="true">
+								<div class="mock">
+									<div class="m-nav"><i class="m-logo"></i><span><i></i><i></i><i></i></span></div>
+									<div class="m-hero"><b class="m-h1"></b><b class="m-h2"></b><span class="m-btn"></span></div>
+									<div class="m-cards"><i></i><i></i><i></i></div>
+								</div>
+								<p class="cap note">&gt; theme: <span data-theme-name>lime</span></p>
+							</div>
+						)}
+						{s.demo === 'develop' && (
+							<div class="demo d-develop" data-demo="develop" aria-hidden="true">
+								<div class="dv-code">
+									<p><b>&lt;Booking</b></p>
+									<p>&nbsp;&nbsp;title=<s>"Book a table"</s></p>
+									<p>&nbsp;&nbsp;time=<s>"Tonight · 8 pm"</s></p>
+									<p><b>/&gt;</b></p>
+								</div>
+								<div class="dv-out">
+									<div class="dv-card"><strong>Book a table</strong><span>Tonight · 8 pm</span><em>Confirm</em></div>
+								</div>
+							</div>
+						)}
+						{s.demo === 'store' && (
+							<div class="demo d-store" data-demo="store">
+								<div class="st-top" aria-hidden="true"><span class="note">your-shop.com</span><span class="st-cart"><Icon name="cart" size={20} /><b data-cart>0</b></span></div>
+								<div class="st-product">
+									<div class="st-img" aria-hidden="true"></div>
+									<div>
+										<p class="st-name">Classic tee</p>
+										<p class="note">Demo product</p>
+									</div>
+									<button type="button" class="st-add" data-add>Add to cart</button>
+								</div>
+							</div>
+						)}
+						{s.demo === 'mobile' && (
+							<div class="demo d-mobile" data-demo="mobile" aria-hidden="true">
+								<div class="mb-frame" data-frame>
+									<div class="mb-page">
+										<div class="mb-nav"><i class="m-logo"></i><span class="mb-links"><i></i><i></i><i></i></span><span class="mb-burger"><i></i><i></i></span></div>
+										<b class="mb-h1"></b>
+										<div class="mb-cards"><i></i><i></i><i></i></div>
+									</div>
+								</div>
+								<p class="cap note">&gt; screen: <span data-width>1280px</span></p>
+							</div>
+						)}
+						{s.demo === 'seo' && (
+							<div class="demo d-seo" data-demo="seo" aria-hidden="true">
+								<div class="sr-bar"><Icon name="search" size={18} /><span>web designer near me</span></div>
+								<ol class="sr-list" data-results>
+									<li data-r="0"><b>Big Agency Ltd</b><span>bigagency.com</span></li>
+									<li data-r="1"><b>Web Directory</b><span>listings.com</span></li>
+									<li data-r="2"><b>Templates Hub</b><span>templates.com</span></li>
+									<li data-r="3"><b>Freelancer list</b><span>freelance.com</span></li>
+									<li data-r="4" class="ours"><b>Your Business</b><span>your-site.com</span></li>
+								</ol>
+							</div>
+						)}
+					</div>
+
+					<div class="sb-text">
+						<p class="note sb-num"><span class="icon"><Icon name={s.icon} size={22} /></span> 0{i + 1} / 0{items.length}</p>
+						<h2 data-split>{s.title}</h2>
+						<p class="desc" data-reveal>{s.body}</p>
+						<ul class="points" data-reveal>
+							{s.points.map((p) => <li><Icon name="check" size={20} /> {p}</li>)}
+						</ul>
+						<div class="mini-faq" data-reveal>
+							{s.faq.map((f) => (
+								<details>
+									<summary>{f.q}<span class="plus" aria-hidden="true"></span></summary>
+									<p>{f.a}</p>
+								</details>
+							))}
+						</div>
+						<a class="btn btn-primary" href={contactFor(s.title)} data-reveal data-magnetic>{s.cta} <Icon name="arrow" size={20} /></a>
+					</div>
+				</article>
+			))}
+		</div>
 	</section>
 
+	<!-- Before / after + speed -->
+	<section class="section proof">
+		<div class="wrap stack">
+			<p class="kicker" data-reveal>why it matters</p>
+			<h2 data-split>Old site vs. <span class="accent">new site.</span></h2>
+			<div class="proof-grid">
+				<figure class="ba-wrap" data-reveal>
+					<div class="ba" data-ba style="--pos: 50%">
+						<div class="ba-side ba-before" aria-hidden="true">
+							<div class="old">
+								<p class="old-marq">★ WELCOME TO OUR WEBSITE!!! ★</p>
+								<h3>Corner Bakery</h3>
+								<p class="old-links"><u>Home</u> | <u>About Us</u> | <u>Our Breads</u> | <u>Contact</u></p>
+								<div class="old-img">[ photo ]</div>
+								<p>We are a family bakery. Call us for orders. Best viewed in Internet Explorer.</p>
+								<p class="old-count">Visitors: 000123</p>
+								<p class="old-uc">🚧 Under construction 🚧</p>
+							</div>
+						</div>
+						<div class="ba-side ba-after" aria-hidden="true">
+							<div class="new">
+								<div class="new-nav"><b>Corner<span>Bakery</span></b><span>Menu · Order · Visit</span></div>
+								<p class="new-h">Fresh bakes,<br /><span>delivered daily.</span></p>
+								<span class="new-btn">Order online →</span>
+								<div class="new-cards"><i></i><i></i><i></i></div>
+							</div>
+						</div>
+						<span class="ba-label l">Before</span>
+						<span class="ba-label r">After</span>
+						<div class="ba-handle" aria-hidden="true"><span>‹ ›</span></div>
+						<input type="range" min="0" max="100" value="50" step="1" aria-label="Drag to compare the old and new website" data-ba-range />
+					</div>
+					<figcaption class="note">Concept example, not a client project. Drag to compare.</figcaption>
+				</figure>
+
+				<div class="speed card" data-reveal data-speed data-spot>
+					<div class="dial">
+						<svg viewBox="0 0 120 120" aria-hidden="true">
+							<circle class="track" cx="60" cy="60" r="52" pathLength="100" />
+							<circle class="arc" cx="60" cy="60" r="52" pathLength="100" />
+						</svg>
+						<p class="score"><span data-score>95</span></p>
+					</div>
+					<h3>Built to load fast</h3>
+					<p>Slow sites lose visitors. We optimise images and code and aim for <strong class="accent">90+</strong> on Google PageSpeed for every site we launch.</p>
+					<ul class="speed-tags note"><li>optimised images</li><li>lightweight code</li><li>mobile first</li></ul>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Packages + comparison -->
+	<section class="section" id="packages">
+		<div class="wrap stack">
+			<p class="kicker" data-reveal>packages</p>
+			<h2 data-split>Pick a starting <span class="accent">point.</span></h2>
+			<p class="lead" data-reveal>Every project is quoted after a free call, so you only pay for what you need.</p>
+			<div class="pkgs">
+				{packages.map((p) => (
+					<article class:list={['pkg', 'card', { popular: p.popular }]} data-pkg-card={p.id} data-reveal data-spot>
+						{p.popular && <span class="badge">most popular</span>}
+						<h3>{p.name}</h3>
+						<p class="price">{p.price || 'Custom quote'}</p>
+						<p class="blurb">{p.blurb}</p>
+						<a class:list={['btn', p.popular ? 'btn-primary' : 'btn-ghost']} href={`/contact/?package=${encodeURIComponent(p.name)}`} data-magnetic>Get a quote <Icon name="arrow" size={18} /></a>
+					</article>
+				))}
+			</div>
+
+			<div class="table-wrap" data-reveal>
+				<table class="compare" data-ticks>
+					<thead>
+						<tr><th scope="col"><span class="sr-only">Feature</span></th>{packages.map((p) => <th scope="col">{p.name}</th>)}</tr>
+					</thead>
+					<tbody>
+						{features.map((f) => (
+							<tr>
+								<th scope="row">{f.label}</th>
+								{f.values.map((v) => (
+									<td>
+										{v === true ? <span class="tick"><Icon name="check" size={16} /><span class="sr-only">Included</span></span>
+											: v === false ? <span class="dash" aria-label="Not included">—</span>
+											: <span class="txt">{v}</span>}
+									</td>
+								))}
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
 </Layout>
 
+<script>
+	const root = document.documentElement;
+	const motion = root.classList.contains('motion');
+
+	/* ---------- picker ---------- */
+	const picker = document.querySelector<HTMLElement>('[data-picker]');
+	const chips = [...document.querySelectorAll<HTMLButtonElement>('[data-need]')];
+	const suggest = document.querySelector<HTMLElement>('[data-suggest]');
+	const suggestLink = document.querySelector<HTMLAnchorElement>('[data-suggest-link]');
+	const pkgNames: Record<string, string> = {};
+	document.querySelectorAll<HTMLElement>('[data-pkg-card]').forEach((c) => (pkgNames[c.dataset.pkgCard!] = c.querySelector('h3')?.textContent ?? ''));
+
+	function pick(chip: HTMLButtonElement | null) {
+		chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+		const ids = chip ? (chip.dataset.services ?? '').split(',') : [];
+		document.querySelectorAll<HTMLElement>('[data-svc]').forEach((b) => b.classList.toggle('is-dim', !!chip && !ids.includes(b.dataset.svc!)));
+		document.querySelectorAll<HTMLElement>('[data-nav]').forEach((a) => a.classList.toggle('is-match', !!chip && ids.includes(a.dataset.nav!)));
+		document.querySelectorAll<HTMLElement>('[data-pkg-card]').forEach((c) => c.classList.toggle('is-suggested', !!chip && c.dataset.pkgCard === chip.dataset.pkg));
+		if (suggest && suggestLink) {
+			suggest.hidden = !chip;
+			if (chip) suggestLink.textContent = `${pkgNames[chip.dataset.pkg!]} →`;
+		}
+	}
+	chips.forEach((c) => c.addEventListener('click', () => pick(c.getAttribute('aria-pressed') === 'true' ? null : c)));
+	document.querySelector('[data-clear]')?.addEventListener('click', () => pick(null));
+	picker?.classList.add('ready');
+
+	/* ---------- sticky menu: highlight the service you're reading ---------- */
+	const navLinks = [...document.querySelectorAll<HTMLElement>('[data-nav]')];
+	const spy = new IntersectionObserver((entries) => {
+		entries.forEach((e) => {
+			if (!e.isIntersecting) return;
+			const id = (e.target as HTMLElement).dataset.svc;
+			navLinks.forEach((a) => a.classList.toggle('is-active', a.dataset.nav === id));
+		});
+	}, { rootMargin: '-45% 0px -50% 0px' });
+	document.querySelectorAll('[data-svc]').forEach((b) => spy.observe(b));
+
+	/* ---------- run things only while they're on screen ---------- */
+	function whileVisible(el: Element, start: () => () => void) {
+		let stop: (() => void) | null = null;
+		new IntersectionObserver(([e]) => {
+			if (e.isIntersecting && !stop) stop = start();
+			else if (!e.isIntersecting && stop) { stop(); stop = null; }
+		}, { threshold: 0.25 }).observe(el);
+	}
+
+	/* ---------- demo: design themes ---------- */
+	document.querySelectorAll<HTMLElement>('[data-demo="design"]').forEach((d) => {
+		const themes = ['lime', 'ocean', 'sunset', 'mono'];
+		const label = d.querySelector('[data-theme-name]');
+		let i = 0;
+		const next = () => { i = (i + 1) % themes.length; d.dataset.theme = themes[i]; if (label) label.textContent = themes[i]; };
+		d.addEventListener('pointerenter', next);
+		if (motion) whileVisible(d, () => { const t = setInterval(next, 1700); return () => clearInterval(t); });
+	});
+
+	/* ---------- demo: code becomes a component ---------- */
+	document.querySelectorAll<HTMLElement>('[data-demo="develop"]').forEach((d) => {
+		if (!motion) return d.classList.add('is-in');
+		whileVisible(d, () => {
+			const run = () => { d.classList.remove('is-in'); void d.offsetWidth; d.classList.add('is-in'); };
+			run();
+			const t = setInterval(run, 4800);
+			return () => clearInterval(t);
+		});
+	});
+
+	/* ---------- demo: add to cart ---------- */
+	document.querySelectorAll<HTMLElement>('[data-demo="store"]').forEach((d) => {
+		const count = d.querySelector<HTMLElement>('[data-cart]');
+		const btn = d.querySelector<HTMLButtonElement>('[data-add]');
+		let n = 0;
+		const add = () => {
+			n = n >= 9 ? 1 : n + 1;
+			if (count) count.textContent = String(n);
+			d.classList.remove('bump'); void d.offsetWidth; d.classList.add('bump');
+		};
+		btn?.addEventListener('click', add);
+		let hovering = false;
+		d.addEventListener('pointerenter', () => (hovering = true));
+		d.addEventListener('pointerleave', () => (hovering = false));
+		if (motion) whileVisible(d, () => { const t = setInterval(() => !hovering && add(), 2200); return () => clearInterval(t); });
+	});
+
+	/* ---------- demo: layout reflowing from desktop to phone ---------- */
+	document.querySelectorAll<HTMLElement>('[data-demo="mobile"]').forEach((d) => {
+		const frame = d.querySelector<HTMLElement>('[data-frame]');
+		const label = d.querySelector<HTMLElement>('[data-width]');
+		if (!frame || !label) return;
+		if (!motion) { frame.style.width = '45%'; label.textContent = '390px'; return; }
+		whileVisible(d, () => {
+			d.classList.add('is-in');
+			let raf = 0;
+			const tick = () => {
+				const ratio = frame.offsetWidth / (d.clientWidth - 40);
+				label.textContent = `${Math.round(390 + (1280 - 390) * Math.max(0, (ratio - 0.4) / 0.6))}px`;
+				raf = requestAnimationFrame(tick);
+			};
+			tick();
+			return () => { cancelAnimationFrame(raf); d.classList.remove('is-in'); };
+		});
+	});
+
+	/* ---------- demo: climbing to #1 on Google ---------- */
+	document.querySelectorAll<HTMLElement>('[data-demo="seo"]').forEach((d) => {
+		const rows = [...d.querySelectorAll<HTMLElement>('[data-r]')];
+		const ours = rows.find((r) => r.classList.contains('ours'))!;
+		let order = [...rows]; // index = rank
+		const place = () => order.forEach((r, rank) => { r.style.transform = `translateY(${rank * 100}%)`; r.dataset.rank = String(rank + 1); });
+		const reset = () => { order = rows.filter((r) => r !== ours).concat(ours); place(); };
+		reset();
+		if (!motion) { order = [ours, ...rows.filter((r) => r !== ours)]; place(); return; }
+		whileVisible(d, () => {
+			let step = 0;
+			const t = setInterval(() => {
+				const at = order.indexOf(ours);
+				if (at > 0) { [order[at - 1], order[at]] = [order[at], order[at - 1]]; place(); }
+				else if (++step > 3) { step = 0; reset(); }
+			}, 850);
+			return () => clearInterval(t);
+		});
+	});
+
+	/* ---------- before / after slider ---------- */
+	document.querySelectorAll<HTMLElement>('[data-ba]').forEach((ba) => {
+		const range = ba.querySelector<HTMLInputElement>('[data-ba-range]');
+		range?.addEventListener('input', () => ba.style.setProperty('--pos', `${range.value}%`));
+	});
+
+	/* ---------- speed dial + table ticks: animate once when they appear ---------- */
+	const once = (el: Element, fn: () => void) => new IntersectionObserver(([e], o) => { if (e.isIntersecting) { fn(); o.disconnect(); } }, { threshold: 0.4 }).observe(el);
+	document.querySelectorAll<HTMLElement>('[data-speed]').forEach((s) => {
+		const score = s.querySelector<HTMLElement>('[data-score]');
+		const end = Number(score?.textContent) || 95;
+		if (!motion) return s.classList.add('is-in');
+		if (score) score.textContent = '0';
+		once(s, () => {
+			s.classList.add('is-in');
+			const t0 = performance.now();
+			const run = (t: number) => {
+				const p = Math.min(1, (t - t0) / 1600);
+				if (score) score.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 3))));
+				if (p < 1) requestAnimationFrame(run);
+			};
+			requestAnimationFrame(run);
+		});
+	});
+	document.querySelectorAll<HTMLElement>('[data-ticks]').forEach((t) => (motion ? once(t, () => t.classList.add('is-in')) : t.classList.add('is-in')));
+</script>
+
 <style>
-	.page-head { padding-bottom: 3rem; }
-	.list { display: grid; gap: 1.25rem; }
-	.row { display: grid; grid-template-columns: 14rem 1fr; gap: 2rem; }
-	.head { display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; }
-	.head .icon { margin: 0; }
-	.body h2 { font-size: clamp(1.75rem, 3.5vw, 2.5rem); }
-	.desc { margin-top: 0.85rem; font-size: 1.15rem; max-width: 40rem; }
-	ul { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 0.6rem; }
-	li { display: flex; align-items: center; gap: 0.6rem; color: var(--fg); }
-	li :global(svg) { color: var(--accent); flex: none; }
-	@media (max-width: 760px) { .row { grid-template-columns: 1fr; } .head { flex-direction: row; align-items: center; } }
+	.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+	.page-head { padding-bottom: 2rem; }
+
+	/* Picker */
+	.picker { margin-top: 1rem; display: grid; gap: 0.85rem; }
+	.picker > .note { color: var(--accent); font-weight: 700; }
+	.chips { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+	.chip {
+		font: inherit; font-weight: 500; color: var(--fg); background: var(--card); border: 1px solid var(--line);
+		padding: 0.7rem 1.1rem; border-radius: 999px; cursor: pointer; transition: background 0.2s, border-color 0.2s, color 0.2s;
+	}
+	.chip:hover { border-color: var(--fg-3); }
+	.chip[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+	.suggest { color: var(--fg-2); }
+	.suggest a { color: var(--accent); font-weight: 600; }
+	.clear { font: inherit; color: var(--fg-3); background: none; border: 0; cursor: pointer; text-decoration: underline; padding: 0; }
+
+	/* Layout with sticky menu */
+	.svc-layout { display: grid; grid-template-columns: 15rem 1fr; gap: clamp(2rem, 5vw, 4rem); align-items: start; padding-top: 2rem; }
+	.svc-nav { position: sticky; top: 6.5rem; }
+	.svc-nav ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.25rem; border-left: 1px solid var(--line); }
+	.svc-nav a { display: flex; gap: 0.75rem; padding: 0.6rem 0 0.6rem 1rem; margin-left: -1px; border-left: 2px solid transparent; color: var(--fg-3); font-weight: 500; transition: color 0.25s, border-color 0.25s; }
+	.svc-nav a:hover { color: var(--fg); }
+	.svc-nav a.is-active { color: var(--fg); border-left-color: var(--accent); }
+	.svc-nav a.is-match::after { content: '■'; color: var(--accent); margin-left: auto; font-size: 0.7rem; align-self: center; }
+	.nn { font-family: var(--mono); font-size: 0.8rem; color: var(--fg-3); padding-top: 0.15rem; }
+	.svc-nav a.is-active .nn { color: var(--accent); }
+
+	.svc-blocks { display: grid; gap: clamp(4rem, 9vw, 7rem); }
+	.sblock { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 4vw, 3rem); align-items: start; scroll-margin-top: 6rem; transition: opacity 0.4s, filter 0.4s; }
+	.sblock.is-dim { opacity: 0.25; filter: grayscale(1); }
+	.sb-media { display: grid; gap: 1rem; position: sticky; top: 6.5rem; }
+	.sb-photo { position: relative; aspect-ratio: 16 / 10; border-radius: 1rem; overflow: hidden; background: var(--card); }
+	.sb-photo img, .sb-photo :global(canvas) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+	.sb-photo :global(canvas) { transition: opacity 0.2s; }
+	.sb-num { display: flex; align-items: center; gap: 0.6rem; }
+	.sb-num .icon { color: var(--accent); display: inline-flex; }
+	.sb-text h2 { font-size: clamp(2rem, 4vw, 3.25rem); margin-top: 0.75rem; }
+	.desc { margin-top: 1rem; font-size: 1.15rem; color: var(--fg-2); }
+	.points { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: 0.6rem; }
+	.points li { display: flex; align-items: center; gap: 0.6rem; }
+	.points :global(svg) { color: var(--accent); flex: none; }
+	.mini-faq { margin: 1.75rem 0; border-top: 1px solid var(--line); }
+	.mini-faq details { border-bottom: 1px solid var(--line); }
+	.mini-faq summary { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.95rem 0; cursor: pointer; list-style: none; font-weight: 500; transition: color 0.2s; }
+	.mini-faq summary::-webkit-details-marker { display: none; }
+	.mini-faq summary:hover { color: var(--accent); }
+	.mini-faq p { color: var(--fg-2); padding-bottom: 1rem; }
+	.mini-faq details::details-content { block-size: 0; overflow: hidden; transition: block-size 0.35s cubic-bezier(0.7, 0, 0.2, 1), content-visibility 0.35s allow-discrete; }
+	.mini-faq details[open]::details-content { block-size: auto; }
+	.plus { position: relative; width: 0.85rem; height: 0.85rem; flex: none; transition: transform 0.3s; }
+	.plus::before, .plus::after { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 2px; margin-top: -1px; background: var(--accent); }
+	.plus::after { transform: rotate(90deg); }
+	details[open] .plus { transform: rotate(45deg); }
+
+	/* Demos: shared */
+	.demo { position: relative; background: var(--bg-2); border: 1px solid var(--line); border-radius: 1rem; padding: 1.25rem; min-height: 15rem; display: grid; align-content: center; gap: 0.85rem; overflow: hidden; }
+	.cap { color: var(--accent); }
+
+	/* Design: theme swap */
+	.d-design { --m-bg: #0b0b0b; --m-fg: #f2f2f2; --m-acc: #a3e635; --m-card: #1b1b1b; --m-r: 6px; }
+	.d-design[data-theme='ocean'] { --m-bg: #eaf3fb; --m-fg: #0c447c; --m-acc: #378add; --m-card: #ffffff; --m-r: 14px; }
+	.d-design[data-theme='sunset'] { --m-bg: #fbeae4; --m-fg: #712b13; --m-acc: #d85a30; --m-card: #fff7f3; --m-r: 22px; }
+	.d-design[data-theme='mono'] { --m-bg: #f1efe8; --m-fg: #2c2c2a; --m-acc: #2c2c2a; --m-card: #ffffff; --m-r: 0px; }
+	.mock { background: var(--m-bg); border-radius: 0.6rem; padding: 0.9rem; display: grid; gap: 0.9rem; transition: background 0.5s; }
+	.mock *, .mock { transition: background 0.5s, border-radius 0.5s, width 0.5s; }
+	.m-nav { display: flex; justify-content: space-between; align-items: center; }
+	.m-logo { width: 1.1rem; height: 1.1rem; background: var(--m-acc); border-radius: calc(var(--m-r) / 2); display: block; }
+	.m-nav span { display: flex; gap: 0.4rem; }
+	.m-nav span i { width: 1.6rem; height: 0.35rem; background: var(--m-fg); opacity: 0.4; border-radius: 99px; }
+	.m-hero { display: grid; gap: 0.45rem; justify-items: start; }
+	.m-h1 { width: 75%; height: 0.9rem; background: var(--m-fg); border-radius: 3px; }
+	.m-h2 { width: 50%; height: 0.9rem; background: var(--m-acc); border-radius: 3px; }
+	.m-btn { width: 4.5rem; height: 1.3rem; background: var(--m-acc); border-radius: var(--m-r); margin-top: 0.3rem; }
+	.m-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+	.m-cards i { height: 2.6rem; background: var(--m-card); border-radius: var(--m-r); border: 1px solid rgb(127 127 127 / 0.15); }
+
+	/* Develop: code -> component */
+	.d-develop { grid-template-columns: 1.1fr 0.9fr; align-items: center; }
+	.dv-code { font-family: var(--mono); font-size: 0.85rem; line-height: 1.8; background: #050505; border: 1px solid var(--line); border-radius: 0.6rem; padding: 0.9rem; }
+	.dv-code p { margin: 0; white-space: nowrap; overflow: hidden; }
+	.dv-code b { color: var(--accent); }
+	.dv-code s { color: var(--fg-2); text-decoration: none; }
+	.dv-card { background: #f2f2f2; color: #0b0b0b; border-radius: 0.8rem; padding: 0.9rem; display: grid; gap: 0.2rem; }
+	.dv-card span { font-size: 0.85rem; color: #555; }
+	.dv-card em { font-style: normal; font-weight: 700; background: var(--accent); border-radius: 99px; padding: 0.35rem 0.8rem; justify-self: start; margin-top: 0.4rem; font-size: 0.85rem; }
+	:global(html.motion) .d-develop .dv-code p { width: 0; }
+	:global(html.motion) .d-develop .dv-card { opacity: 0; transform: translateY(14px) scale(0.92); }
+	.d-develop.is-in .dv-code p { animation: dv-type 0.45s steps(20) forwards; }
+	.d-develop.is-in .dv-code p:nth-child(2) { animation-delay: 0.4s; }
+	.d-develop.is-in .dv-code p:nth-child(3) { animation-delay: 0.8s; }
+	.d-develop.is-in .dv-code p:nth-child(4) { animation-delay: 1.2s; }
+	.d-develop.is-in .dv-card { animation: dv-pop 0.6s 1.7s cubic-bezier(0.3, 1.5, 0.5, 1) forwards; }
+	@keyframes dv-type { to { width: 100%; } }
+	@keyframes dv-pop { to { opacity: 1; transform: none; } }
+
+	/* Store: add to cart */
+	.st-top { display: flex; justify-content: space-between; align-items: center; }
+	.st-cart { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--accent); }
+	.st-cart b { min-width: 1.5rem; height: 1.5rem; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); border-radius: 99px; font-size: 0.8rem; }
+	.d-store.bump .st-cart b { animation: bump 0.45s cubic-bezier(0.3, 1.8, 0.5, 1); }
+	@keyframes bump { 40% { transform: scale(1.5); } }
+	.st-product { display: grid; grid-template-columns: 5.5rem 1fr auto; align-items: center; gap: 1rem; background: var(--card); border-radius: 0.8rem; padding: 0.8rem; }
+	.st-img { aspect-ratio: 1; border-radius: 0.6rem; background: repeating-linear-gradient(45deg, #2a2a2a 0 8px, #222 8px 16px); position: relative; }
+	.st-img::after { content: ''; position: absolute; inset: 28%; background: var(--accent); clip-path: polygon(20% 0, 80% 0, 100% 25%, 85% 35%, 85% 100%, 15% 100%, 15% 35%, 0 25%); }
+	.st-name { font-weight: 600; }
+	@media (max-width: 480px) { .st-product { grid-template-columns: 3.5rem 1fr auto; gap: 0.7rem; } }
+	.st-add { white-space: nowrap; font: inherit; font-weight: 700; font-size: 0.9rem; background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 99px; padding: 0.6rem 1rem; cursor: pointer; transition: transform 0.15s; }
+	.st-add:active { transform: scale(0.94); }
+	.d-store.bump .st-add { animation: press 0.3s; }
+	@keyframes press { 40% { transform: scale(0.92); } }
+
+	/* Mobile: reflow */
+	.mb-frame { container-type: inline-size; width: 100%; justify-self: center; border: 2px solid #3a3a3a; border-radius: 0.8rem; padding: 0.6rem; background: #0b0b0b; }
+	.d-mobile.is-in .mb-frame { animation: shrink 4.4s ease-in-out infinite alternate; }
+	@keyframes shrink { 0%, 15% { width: 100%; border-radius: 0.8rem; } 85%, 100% { width: 40%; border-radius: 1.4rem; } }
+	.mb-page { display: grid; gap: 0.6rem; }
+	.mb-nav { display: flex; justify-content: space-between; align-items: center; }
+	.mb-links { display: flex; gap: 0.35rem; }
+	.mb-links i { width: 1.4rem; height: 0.3rem; background: #555; border-radius: 99px; }
+	.mb-burger { display: none; gap: 3px; }
+	.mb-burger i { display: block; width: 0.9rem; height: 2px; background: #aaa; }
+	.mb-h1 { height: 0.9rem; width: 70%; background: #f2f2f2; border-radius: 3px; }
+	.mb-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+	.mb-cards i { height: 2.2rem; background: #1f1f1f; border-radius: 0.4rem; }
+	.mb-cards i:first-child { background: var(--accent); }
+	@container (max-width: 230px) {
+		.mb-links { display: none; }
+		.mb-burger { display: grid; }
+		.mb-h1 { width: 100%; }
+		.mb-cards { grid-template-columns: 1fr; }
+		.mb-cards i { height: 1.3rem; }
+	}
+
+	/* SEO: climbing results */
+	.sr-bar { display: flex; align-items: center; gap: 0.6rem; background: var(--card); border: 1px solid var(--line); border-radius: 99px; padding: 0.55rem 1rem; color: var(--fg-2); }
+	.sr-bar :global(svg) { color: var(--accent); }
+	.sr-list { position: relative; list-style: none; padding: 0; margin: 0; height: 13.5rem; }
+	.sr-list li {
+		position: absolute; left: 0; right: 0; top: 0; height: 2.7rem; display: grid; align-content: center; padding-left: 2.2rem;
+		border-bottom: 1px solid var(--line); transition: transform 0.6s cubic-bezier(0.7, 0, 0.2, 1);
+	}
+	.sr-list li::before { content: '#' attr(data-rank); position: absolute; left: 0; top: 50%; transform: translateY(-50%); font-family: var(--mono); font-size: 0.75rem; color: var(--fg-3); }
+	.sr-list b { font-size: 0.95rem; font-weight: 600; color: #8ab4f8; }
+	.sr-list span { font-size: 0.78rem; color: var(--fg-3); }
+	.sr-list .ours { z-index: 1; background: var(--bg-2); }
+	.sr-list .ours b { color: var(--accent); }
+	.sr-list .ours::before { color: var(--accent); font-weight: 700; }
+
+	/* Before / after */
+	.proof-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.25rem; margin-top: 2.5rem; align-items: stretch; }
+	.ba-wrap { margin: 0; display: grid; gap: 0.75rem; }
+	.ba { position: relative; aspect-ratio: 16 / 10; border-radius: 1rem; overflow: hidden; border: 1px solid var(--line); user-select: none; }
+	.ba-side { position: absolute; inset: 0; }
+	.ba-after { clip-path: inset(0 0 0 var(--pos)); }
+	.old { height: 100%; background: #f3ecd2; color: #000080; font-family: 'Times New Roman', serif; text-align: center; padding: 0.75rem; font-size: 0.85rem; display: grid; align-content: start; gap: 0.4rem; }
+	.old h3 { font-family: 'Comic Sans MS', 'Times New Roman', serif; color: #8b0000; font-size: 1.6rem; letter-spacing: 0; }
+	.old-marq { background: #000080; color: #ff0; font-weight: 700; padding: 0.2rem; }
+	.old-links u { color: #00e; }
+	.old-img { margin: 0 auto; width: 40%; aspect-ratio: 4 / 3; background: #ccc; color: #666; display: grid; place-items: center; border: 2px outset #eee; }
+	.old-count { font-family: 'Courier New', monospace; color: #060; }
+	.old-uc { background: #ff0; color: #000; font-weight: 700; }
+	.new { height: 100%; background: #0b0b0b; padding: 1rem 1.25rem; display: grid; align-content: start; gap: 0.9rem; }
+	.new-nav { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--fg-2); }
+	.new-nav b { color: var(--fg); }
+	.new-nav b span { color: var(--accent); }
+	.new-h { font-size: clamp(1.4rem, 3vw, 2.3rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1.02; }
+	.new-h span { color: var(--accent); }
+	.new-btn { justify-self: start; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 0.8rem; padding: 0.5rem 0.9rem; border-radius: 99px; }
+	.new-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+	.new-cards i { aspect-ratio: 4 / 3; background: #1b1b1b; border-radius: 0.5rem; }
+	.ba-label { position: absolute; top: 0.75rem; font-family: var(--mono); font-weight: 700; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 0.3rem; background: #0b0b0b; color: var(--fg); pointer-events: none; }
+	.ba-label.l { left: 0.75rem; }
+	.ba-label.r { right: 0.75rem; background: var(--accent); color: var(--accent-ink); }
+	.ba-handle { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; background: var(--accent); transform: translateX(-1px); pointer-events: none; }
+	.ba-handle span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 2.75rem; height: 2.75rem; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; }
+	.ba input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
+	.ba input:focus-visible + * , .ba:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+	/* Speed dial */
+	.speed { display: grid; align-content: center; justify-items: start; gap: 0.75rem; }
+	.dial { position: relative; width: 9rem; aspect-ratio: 1; }
+	.dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+	.dial circle { fill: none; stroke-width: 9; }
+	.track { stroke: var(--line); }
+	.arc { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset 1.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+	.speed.is-in .arc { stroke-dashoffset: 5; }
+	.score { position: absolute; inset: 0; display: grid; place-items: center; font-size: 2.5rem; font-weight: 700; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+	.speed h3 { font-size: 1.6rem; margin-top: 0.5rem; }
+	.speed p { color: var(--fg-2); }
+	.speed-tags { list-style: none; padding: 0; margin: 0.25rem 0 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+	.speed-tags li { border: 1px solid var(--line); padding: 0.25rem 0.55rem; border-radius: 0.35rem; color: var(--fg-2); }
+
+	/* Packages */
+	.pkgs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1.25rem; margin-top: 2.5rem; }
+	.pkg { display: grid; gap: 0.6rem; align-content: start; border: 1px solid transparent; transition: border-color 0.3s, transform 0.3s; }
+	.pkg.popular { border-color: rgb(163 230 53 / 0.45); }
+	.pkg.is-suggested { border-color: var(--accent); transform: translateY(-6px); }
+	.badge { justify-self: start; font-family: var(--mono); font-weight: 700; font-size: 0.75rem; background: var(--accent); color: var(--accent-ink); padding: 0.2rem 0.5rem; border-radius: 0.3rem; }
+	.pkg h3 { font-size: 1.6rem; }
+	.price { font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+	.blurb { min-height: 3.2em; }
+	.pkg .btn { justify-self: start; margin-top: 0.75rem; }
+
+	/* Comparison table */
+	.table-wrap { margin-top: 2.5rem; border: 1px solid var(--line); border-radius: 1rem; overflow-x: auto; }
+	.compare { width: 100%; border-collapse: collapse; min-width: 34rem; }
+	.compare th, .compare td { padding: 1rem 1.25rem; text-align: center; border-bottom: 1px solid var(--line); }
+	.compare thead th { font-size: 1rem; background: var(--bg-2); }
+	.compare tbody th { text-align: left; font-weight: 500; color: var(--fg-2); }
+	.compare tr:last-child > * { border-bottom: 0; }
+	.compare tbody tr { transition: background 0.2s; }
+	.compare tbody tr:hover { background: rgb(255 255 255 / 0.02); }
+	.tick { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; background: var(--accent); color: var(--accent-ink); }
+	.dash { color: var(--fg-3); }
+	.txt { color: var(--fg); font-size: 0.95rem; }
+	:global(html.motion) .compare .tick { transform: scale(0); }
+	.compare.is-in .tick { animation: tick-in 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) forwards; }
+	.compare.is-in tr:nth-child(2) .tick { animation-delay: 0.06s; }
+	.compare.is-in tr:nth-child(3) .tick { animation-delay: 0.12s; }
+	.compare.is-in tr:nth-child(4) .tick { animation-delay: 0.18s; }
+	.compare.is-in tr:nth-child(5) .tick { animation-delay: 0.24s; }
+	.compare.is-in tr:nth-child(6) .tick { animation-delay: 0.3s; }
+	.compare.is-in tr:nth-child(7) .tick { animation-delay: 0.36s; }
+	.compare.is-in tr:nth-child(8) .tick { animation-delay: 0.42s; }
+	.compare.is-in tr:nth-child(9) .tick { animation-delay: 0.48s; }
+	@keyframes tick-in { to { transform: scale(1); } }
+
+	@media (max-width: 1000px) {
+		.svc-layout { grid-template-columns: 1fr; }
+		.svc-nav { display: none; }
+	}
+	@media (max-width: 860px) {
+		.sblock, .proof-grid { grid-template-columns: 1fr; }
+		.sb-media { position: static; }
+		.d-develop { grid-template-columns: 1fr; }
+	}
 </style>

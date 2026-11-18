@@ -59,6 +59,15 @@ import { services, site, whatsappHref } from '../data/site';
 	const form = document.getElementById('contact-form') as HTMLFormElement;
 	const status = form.querySelector('.status') as HTMLElement;
 
+	// Coming from a "Start a ... project" or "Get a quote" button: pre-fill what they picked.
+	const params = new URLSearchParams(location.search);
+	const service = params.get('service');
+	const pkg = params.get('package');
+	const select = form.querySelector<HTMLSelectElement>('select[name="service"]');
+	const message = form.querySelector<HTMLTextAreaElement>('textarea[name="message"]');
+	if (service && select && [...select.options].some((o) => o.value === service)) select.value = service;
+	if (pkg && message && !message.value) message.value = `Hi! I'm interested in the ${pkg} package. `;
+
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();
 		const data = new FormData(form);

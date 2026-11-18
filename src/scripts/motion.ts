@@ -100,7 +100,7 @@ function pageTransitions() {
 		if (url.pathname === location.pathname) {
 			// Same page: smooth-scroll to anchors or the top instead of reloading.
 			e.preventDefault();
-			lenis?.scrollTo(url.hash || 0, { duration: 1.2 });
+			lenis?.scrollTo(url.hash || 0, { duration: 1.2, offset: url.hash ? -96 : 0 });
 			return;
 		}
 		e.preventDefault();
@@ -375,7 +375,7 @@ function pixelateImages() {
 		draw();
 		img.style.visibility = '';
 		ScrollTrigger.create({ trigger: img, start: 'top 85%', once: true, onEnter: sharpen });
-		img.closest('.person')?.addEventListener('pointerenter', () => {
+		img.closest('[data-pixelate-host], .person')?.addEventListener('pointerenter', () => {
 			canvas.style.opacity = '1';
 			gsap.fromTo(s, { b: 16 }, { b: 1, duration: 0.6, ease: 'steps(6)', onUpdate: draw, onComplete: () => void (canvas.style.opacity = '0'), overwrite: true });
 		});
