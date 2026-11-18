@@ -230,6 +230,65 @@ function pointerFx() {
 	document.addEventListener('pointerleave', () => gsap.to(cursor, { opacity: 0, duration: 0.3 }));
 }
 
+/* ---------- service rows: photo follows the cursor ---------- */
+function servicePreview() {
+	const list = document.querySelector<HTMLElement>('.svc-list');
+	const preview = document.querySelector<HTMLElement>('.svc-preview');
+	if (!list || !preview) return;
+	const rows = [...list.querySelectorAll<HTMLElement>('.svc')];
+	const imgs = [...preview.querySelectorAll<HTMLImageElement>('img')];
+	const cap = preview.querySelector('.svc-cap span');
+
+	gsap.set(preview, { xPercent: -50, yPercent: -50, scale: 0.6, autoAlpha: 0 });
+	gsap.set(imgs, { yPercent: 100 });
+	const xTo = gsap.quickTo(preview, 'x', { duration: 0.65, ease: 'power3.out' });
+	const yTo = gsap.quickTo(preview, 'y', { duration: 0.65, ease: 'power3.out' });
+	const rTo = gsap.quickTo(preview, 'rotation', { duration: 0.8, ease: 'power3.out' });
+
+	let current = -1;
+	let z = 1;
+	let lastX = 0;
+	let settle: gsap.core.Tween | null = null;
+
+	list.addEventListener('pointerenter', (e) => {
+		gsap.set(preview, { x: e.clientX, y: e.clientY });
+		lastX = e.clientX;
+	});
+	list.addEventListener('pointermove', (e) => {
+		xTo(e.clientX);
+		yTo(e.clientY);
+		// Tilt in the direction the mouse moves, then straighten out.
+		rTo(gsap.utils.clamp(-14, 14, (e.clientX - lastX) * 0.8));
+		lastX = e.clientX;
+		settle?.kill();
+		settle = gsap.delayedCall(0.12, () => rTo(0));
+	});
+	list.addEventListener('pointerleave', () => {
+		current = -1;
+		gsap.to(preview, { scale: 0.6, autoAlpha: 0, duration: 0.35, ease: 'power3.in', overwrite: 'auto' });
+	});
+
+	rows.forEach((row, i) => {
+		row.addEventListener('pointerenter', () => {
+			if (i === current) return;
+			const img = imgs[i];
+			if (cap) cap.textContent = img.dataset.file ?? '';
+			if (current === -1) {
+				// First row entered: pop the frame in with this row's photo already in place.
+				gsap.set(imgs, { yPercent: 100 });
+				gsap.set(img, { yPercent: 0, scale: 1, zIndex: ++z });
+				gsap.to(preview, { scale: 1, autoAlpha: 1, duration: 0.5, ease: 'back.out(1.7)', overwrite: 'auto' });
+			} else {
+				// Moving between rows: the new photo slides in from the side you came from.
+				const dir = i > current ? 1 : -1;
+				gsap.fromTo(img, { yPercent: 100 * dir, scale: 1.25, zIndex: ++z }, { yPercent: 0, scale: 1, duration: 0.7, ease: 'expo.out', overwrite: true });
+				gsap.to(imgs[current], { yPercent: -35 * dir, duration: 0.7, ease: 'expo.out', overwrite: true });
+			}
+			current = i;
+		});
+	});
+}
+
 function spotlights() {
 	// Cards glow where the pointer is.
 	document.addEventListener('pointermove', (e) => {
@@ -254,7 +313,7 @@ if (motion) {
 			textReveals();
 			marquees();
 			spotlights();
-			if (finePointer) pointerFx();
+			if (finePointer) { pointerFx(); servicePreview(); }
 			const hero = heroIn().pause();
 			intro(() => void hero.play());
 		} catch (err) {

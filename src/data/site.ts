@@ -1,4 +1,11 @@
 // Everything about the business lives here, so contact details only change in one place.
+import type { ImageMetadata } from 'astro';
+// Service photos: free Unsplash images (unsplash.com/license).
+import designImg from '../assets/services/design.jpg';
+import developmentImg from '../assets/services/development.jpg';
+import ecommerceImg from '../assets/services/ecommerce.jpg';
+import mobileImg from '../assets/services/mobile.jpg';
+import seoImg from '../assets/services/seo.jpg';
 
 export const site = {
 	name: 'PixelWeb Digital',
@@ -38,10 +45,11 @@ export const nav = [
 
 export type IconName = 'monitor' | 'code' | 'cart' | 'phone' | 'search' | 'rocket' | 'arrow' | 'mail' | 'chat' | 'instagram' | 'check';
 
-export const services: { icon: IconName; title: string; short: string; body: string; points: string[] }[] = [
+export const services: { icon: IconName; title: string; short: string; body: string; points: string[]; image: ImageMetadata; imageAlt: string; file: string }[] = [
 	{
 		icon: 'monitor',
 		title: 'Website Design',
+		image: designImg, imageAlt: 'Designer working on a website layout on a large monitor', file: 'website_design',
 		short: 'Modern looks that build trust',
 		body: 'A clean, modern design built around your brand, so visitors trust you from the first second they land on your page.',
 		points: ['Custom design, no cookie-cutter templates', 'Your colours, fonts and logo', 'Clear layout that leads people to contact you'],
@@ -49,6 +57,7 @@ export const services: { icon: IconName; title: string; short: string; body: str
 	{
 		icon: 'code',
 		title: 'Web Development',
+		image: developmentImg, imageAlt: 'Code on a computer screen', file: 'web_development',
 		short: 'Custom sites & web apps',
 		body: 'Fast, secure code that just works. From a simple business site to a custom web app with logins and dashboards.',
 		points: ['Hand-built, lightweight code', 'Booking, forms and integrations', 'Easy to grow as your business grows'],
@@ -56,6 +65,7 @@ export const services: { icon: IconName; title: string; short: string; body: str
 	{
 		icon: 'cart',
 		title: 'E-commerce Stores',
+		image: ecommerceImg, imageAlt: 'Person paying online with a card on a laptop', file: 'ecommerce_store',
 		short: 'Sell online, 24/7',
 		body: 'An online store that takes orders while you sleep: product pages, cart, secure payments and order emails.',
 		points: ['Product catalogue and checkout', 'Secure online payments', 'Simple to add and edit products'],
@@ -63,6 +73,7 @@ export const services: { icon: IconName; title: string; short: string; body: str
 	{
 		icon: 'phone',
 		title: 'Mobile-friendly & Fast',
+		image: mobileImg, imageAlt: 'Hand holding a smartphone in colourful light', file: 'mobile_first',
 		short: 'Perfect on every screen',
 		body: 'Most of your customers are on their phones. Every site we build is designed for mobile first and loads in a blink.',
 		points: ['Looks right on phones, tablets and desktops', 'Optimised images and fast loading', 'Tested on real devices'],
@@ -70,6 +81,7 @@ export const services: { icon: IconName; title: string; short: string; body: str
 	{
 		icon: 'search',
 		title: 'SEO-ready',
+		image: seoImg, imageAlt: 'Phone showing a Google search page', file: 'seo_ready',
 		short: 'Get found on Google',
 		body: 'A beautiful site is useless if nobody finds it. We set up the foundations so Google understands and ranks your business.',
 		points: ['Page titles, descriptions and sitemaps', 'Google Business Profile tips', 'Clean structure search engines love'],

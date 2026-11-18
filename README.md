@@ -27,3 +27,9 @@ npm install
 npm run dev      # local preview at http://localhost:4321
 npm run build    # production build into dist/
 ```
+
+## Photo credits
+
+The service photos in `src/assets/services/` are free images from [Unsplash](https://unsplash.com/license):
+design (unsplash.com/photos/i1VQZsU86ok), development (ieic5Tq8YMk), e-commerce (Q59HmzK38eQ),
+mobile (0VGG7cqTwCo) and SEO (UWVJaDvXW_c). Swap in your own project screenshots any time.
