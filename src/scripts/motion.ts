@@ -7,6 +7,7 @@ import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 import { pixelField } from './pixel-field';
+import { wordmark } from './wordmark';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -20,6 +21,7 @@ let lenis: Lenis | null = null;
 /* ---------- smooth scroll ---------- */
 function smoothScroll() {
 	lenis = new Lenis({ lerp: 0.09 });
+	(window as any).__lenis = lenis; // used by the footer's back-to-top button
 	lenis.on('scroll', ScrollTrigger.update);
 	gsap.ticker.add((t) => lenis?.raf(t * 1000));
 	gsap.ticker.lagSmoothing(0);
@@ -348,6 +350,8 @@ if (motion) {
 			textReveals();
 			marquees();
 			spotlights();
+			const giant = document.querySelector<HTMLElement>('.giant-wrap');
+			if (giant) wordmark(giant);
 			if (finePointer) { pointerFx(); servicePreview(); }
 			const hero = heroIn().pause();
 			intro(() => void hero.play());

@@ -30,6 +30,10 @@ export const site = {
 	// TODO: create a free form at https://formspree.io and paste its endpoint here,
 	// e.g. 'https://formspree.io/f/abcdwxyz'. Until then the form opens the visitor's email app.
 	formEndpoint: '',
+
+	// Shown with a live clock in the footer. timeZone must be an IANA name, e.g. 'Asia/Kolkata'.
+	city: 'Anand, IN',
+	timeZone: 'Asia/Kolkata',
 };
 
 export const whatsappHref = site.whatsapp

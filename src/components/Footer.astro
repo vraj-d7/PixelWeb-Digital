@@ -1,9 +1,23 @@
 ---
 import Logo from './Logo.astro';
+import Icon from './Icon.astro';
 import { nav, site, whatsappHref } from '../data/site';
 const year = new Date().getFullYear();
 ---
 <footer class="footer">
+	<div class="wrap talk-block">
+		<p class="kicker">got a project in mind?</p>
+		<a class="talk" href="/contact/">
+			<span class="talk-text">Let's talk</span>
+			<span class="talk-arrow" data-magnetic><Icon name="arrow" size={40} /></span>
+		</a>
+		<div class="talk-links">
+			<a href={`mailto:${site.email}`}>{site.email}</a>
+			<a href={site.instagram.href} target="_blank" rel="noopener">{site.instagram.handle}</a>
+			{whatsappHref && <a href={whatsappHref} target="_blank" rel="noopener">WhatsApp</a>}
+		</div>
+	</div>
+
 	<div class="wrap cols">
 		<div class="stack brand">
 			<Logo />
@@ -22,22 +36,99 @@ const year = new Date().getFullYear();
 			</ul>
 		</div>
 	</div>
-	<div class="wrap legal note">© {year} PixelWeb Digital · Built by us, obviously.</div>
-	<p class="giant" data-split="chars" aria-hidden="true">Pixel<span class="accent">Web</span></p>
+
+	<div class="wrap bar note">
+		<span>© {year} PixelWeb Digital</span>
+		<span>{site.city} · <span class="clock" data-clock data-tz={site.timeZone}>--:--</span></span>
+		<span><i class="live" aria-hidden="true"></i>taking_new_projects</span>
+		<button class="to-top" type="button" data-top aria-label="Back to top"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" /></svg></button>
+	</div>
+
+	<!-- Pixel wordmark: the canvas takes over when animations run (src/scripts/wordmark.ts); the text is the fallback. -->
+	<div class="giant-wrap" aria-hidden="true">
+		<canvas></canvas>
+		<p class="giant">Pixel<span class="accent">Web</span></p>
+	</div>
 </footer>
 
+<script>
+	// Live clock in the footer bar.
+	const clock = document.querySelector<HTMLElement>('[data-clock]');
+	if (clock) {
+		const fmt = new Intl.DateTimeFormat('en-IN', { timeZone: clock.dataset.tz, hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+		const tick = () => void (clock.textContent = fmt.format(new Date()));
+		tick();
+		setInterval(tick, 1000);
+	}
+	// Back to top: smooth-scroll with Lenis when it's running, otherwise the browser's own smooth scroll.
+	document.querySelector('[data-top]')?.addEventListener('click', () => {
+		const lenis = (window as any).__lenis;
+		if (lenis) lenis.scrollTo(0, { duration: 1.6 });
+		else window.scrollTo({ top: 0, behavior: 'smooth' });
+	});
+</script>
+
 <style>
-	.footer { border-top: 1px solid var(--line); padding-top: 4rem; margin-top: 2rem; }
+	.footer { border-top: 1px solid var(--line); padding-top: clamp(4rem, 9vw, 7rem); margin-top: 2rem; overflow: hidden; }
+
+	/* Closing call to action */
+	.talk-block { display: grid; gap: 1.25rem; justify-items: start; padding-bottom: clamp(3.5rem, 8vw, 6rem); border-bottom: 1px solid var(--line); margin-bottom: 4rem; }
+	.talk { display: inline-flex; align-items: center; gap: clamp(1rem, 3vw, 2rem); }
+	.talk-text {
+		font-size: clamp(3.25rem, 11vw, 9rem); font-weight: 700; letter-spacing: -0.055em; line-height: 0.95;
+		transition: color 0.35s, transform 0.5s cubic-bezier(0.7, 0, 0.2, 1);
+	}
+	.talk-arrow {
+		width: clamp(4rem, 9vw, 7.5rem); aspect-ratio: 1; border-radius: 50%; flex: none;
+		display: grid; place-items: center; background: var(--accent); color: var(--accent-ink);
+		transition: background 0.3s;
+	}
+	.talk-arrow :global(svg) { width: 45%; height: 45%; transition: transform 0.5s cubic-bezier(0.7, 0, 0.2, 1); }
+	.talk:hover .talk-text { color: var(--accent); transform: translateX(0.5rem); }
+	.talk:hover .talk-arrow :global(svg) { transform: rotate(-45deg); }
+	.talk-links { display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; color: var(--fg-2); }
+	.talk-links a { position: relative; transition: color 0.2s; overflow-wrap: anywhere; }
+	.talk-links a::after { content: ''; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform 0.35s; }
+	.talk-links a:hover { color: var(--accent); }
+	.talk-links a:hover::after { transform: scaleX(1); transform-origin: left; }
+
 	.cols { display: grid; gap: 2.5rem; grid-template-columns: 2fr 1fr 1fr; }
 	.brand p { color: var(--fg-2); max-width: 22rem; }
 	ul { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.6rem; }
 	ul a { color: var(--fg-2); transition: color 0.15s; overflow-wrap: anywhere; }
 	ul a:hover { color: var(--accent); }
-	.legal { padding-block: 2rem; margin-top: 3rem; border-top: 1px solid var(--line); }
-	.footer { overflow: hidden; }
+
+	/* Live details bar */
+	.bar {
+		display: flex; align-items: center; justify-content: space-between; gap: 1rem 2rem; flex-wrap: wrap;
+		padding-block: 1.5rem; margin-top: 4rem; border-top: 1px solid var(--line);
+	}
+	.clock { color: var(--fg); font-variant-numeric: tabular-nums; }
+	.live { display: inline-block; width: 8px; height: 8px; background: var(--accent); margin-right: 0.6rem; animation: live-blink 1.4s steps(1) infinite; }
+	@keyframes live-blink { 50% { opacity: 0; } }
+	.to-top {
+		width: 2.75rem; height: 2.75rem; display: grid; place-items: center; cursor: pointer;
+		background: transparent; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 0;
+		transition: background 0.25s, color 0.25s;
+	}
+	.to-top:hover { background: var(--accent); color: var(--accent-ink); }
+	.to-top:hover svg { animation: up 0.6s ease-in-out infinite alternate; }
+	@keyframes up { to { transform: translateY(-3px); } }
+
+	/* Wordmark: runs off the bottom edge on purpose */
+	.giant-wrap { position: relative; margin-top: 1rem; }
+	.giant-wrap canvas { display: none; width: 100%; }
+	.giant-wrap.is-canvas canvas { display: block; }
+	.giant-wrap.is-canvas .giant { display: none; }
 	.giant {
 		font-size: 22.5vw; font-weight: 700; letter-spacing: -0.065em; line-height: 0.78;
-		text-align: center; margin: 0 0 -0.04em; white-space: nowrap; user-select: none;
+		text-align: center; margin: 0 0 -0.12em; white-space: nowrap; user-select: none;
 	}
-	@media (max-width: 760px) { .cols { grid-template-columns: 1fr 1fr; } .brand { grid-column: 1 / -1; } }
+
+	@media (max-width: 760px) {
+		.cols { grid-template-columns: 1fr 1fr; }
+		.brand { grid-column: 1 / -1; }
+		.bar { justify-content: flex-start; }
+		.to-top { margin-left: auto; }
+	}
 </style>
