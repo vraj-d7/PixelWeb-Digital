@@ -131,7 +131,44 @@ function heroIn() {
 		tl.to(state, { n: text.length, duration: text.length * 0.045, ease: 'none', onUpdate: () => void (el.textContent = text.slice(0, Math.round(state.n))) }, 0.1);
 	});
 	tl.from('[data-hero-fade]', { y: 30, opacity: 0, duration: 1, ease, stagger: 0.1 }, 0.45);
+	// The pixel P flies together as the headline comes in.
+	tl.call(() => field?.assemble(), [], 0.15);
+	tl.call(rotateWords, [], 2.2);
 	return tl;
+}
+
+/* ---------- rotating word that decodes like a terminal ---------- */
+const GLYPHS = '!<>-_\\/[]{}=+*^?#01';
+function scrambleTo(el: HTMLElement, next: string, duration = 0.7) {
+	const from = el.textContent ?? '';
+	const len = Math.max(from.length, next.length);
+	const state = { p: 0 };
+	return gsap.to(state, {
+		p: 1, duration, ease: 'none',
+		onUpdate: () => {
+			let out = '';
+			for (let i = 0; i < len; i++) {
+				const settle = (i + 1) / len; // letters lock in from left to right
+				if (state.p >= settle) out += next[i] ?? '';
+				else if (state.p > settle - 0.45) out += GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+				else out += from[i] ?? '';
+			}
+			el.textContent = out;
+		},
+	});
+}
+
+function rotateWords() {
+	document.querySelectorAll<HTMLElement>('[data-rotate]').forEach((el) => {
+		const words = (el.dataset.rotate || '').split(',').map((s) => s.trim()).filter(Boolean);
+		if (words.length < 2) return;
+		let i = 0;
+		const next = () => {
+			i = (i + 1) % words.length;
+			scrambleTo(el, words[i]);
+		};
+		setInterval(() => { if (!document.hidden) next(); }, 2600);
+	});
 }
 
 /* ---------- scroll-driven text and reveals ---------- */
@@ -300,7 +337,7 @@ function spotlights() {
 
 /* ---------- start ---------- */
 const canvas = document.querySelector<HTMLCanvasElement>('[data-pixel-field]');
-if (canvas) pixelField(canvas, motion);
+const field = canvas ? pixelField(canvas, motion) : null;
 
 if (motion) {
 	const start = () => {
