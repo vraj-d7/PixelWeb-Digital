@@ -365,37 +365,7 @@ const faq = [
 		}
 	});
 
-	/* ---------- online now / back at ... ---------- */
-	const avail = document.querySelector<HTMLElement>('[data-availability]');
-	if (avail) {
-		const tz = avail.dataset.tz!;
-		const days = (avail.dataset.days ?? '').split(',').map(Number);
-		const toMin = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-		const open = toMin(avail.dataset.open!), close = toMin(avail.dataset.close!);
-		const label = (min: number) => new Date(2000, 0, 1, Math.floor(min / 60), min % 60).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
-		const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-		const update = () => {
-			const parts = new Intl.DateTimeFormat('en-GB', { timeZone: tz, weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
-			const get = (t: string) => parts.find((p) => p.type === t)?.value ?? '';
-			const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(get('weekday'));
-			const now = Number(get('hour')) * 60 + Number(get('minute'));
-			const isOpen = days.includes(day) && now >= open && now < close;
-			let text = "We're online now · replies within one working day";
-			if (!isOpen) {
-				let d = day, when = '';
-				if (days.includes(day) && now < open) when = 'today';
-				else {
-					for (let k = 1; k <= 7; k++) { d = (day + k) % 7; if (days.includes(d)) break; }
-					when = d === (day + 1) % 7 ? 'tomorrow' : names[d];
-				}
-				text = `Offline now · back ${when} at ${label(open)}`;
-			}
-			avail.classList.toggle('is-open', isOpen);
-			avail.querySelector('[data-avail-text]')!.textContent = text;
-		};
-		update();
-		setInterval(update, 60_000);
-	}
+	// The "online now / back at ..." badge is updated by src/scripts/availability.ts (started from the header).
 
 	/* ---------- copy email ---------- */
 	const toast = document.querySelector<HTMLElement>('[data-toast]')!;

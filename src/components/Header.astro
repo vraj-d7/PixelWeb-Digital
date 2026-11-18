@@ -1,48 +1,513 @@
 ---
 import Logo from './Logo.astro';
-import { nav } from '../data/site';
-const path = Astro.url.pathname;
+import Icon from './Icon.astro';
+import { getImage } from 'astro:assets';
+import { nav, services, site } from '../data/site';
+import { serviceExtras } from '../data/services';
+
+const path = Astro.url.pathname.replace(/\/?$/, '/');
 const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+const onContact = path === '/contact/';
+
+// Header button changes on the Contact page (where "Get a website" would point to itself).
+const cta = onContact
+	? site.bookingUrl ? { text: 'Book a call', href: site.bookingUrl, ext: true } : { text: 'Jump to form', href: '#contact-form', ext: false }
+	: { text: 'Get a website', href: '/contact/', ext: false };
+
+// Mega menu: small photos for each service.
+const thumbs = await Promise.all(services.map((s) => getImage({ src: s.image, width: 160, format: 'webp', quality: 65 })));
+const megaItems = services.map((s, i) => ({ ...s, id: serviceExtras[i].id, thumb: thumbs[i].src }));
+
+// Command palette entries.
+const commands = [
+	...nav.map((n) => ({ group: 'pages', label: n.label, href: n.href, keys: n.label })),
+	...megaItems.map((s) => ({ group: 'services', label: s.title, href: `/services/#${s.id}`, keys: `${s.title} ${s.short} service` })),
+	{ group: 'pages', label: 'Packages and prices', href: '/services/#packages', keys: 'packages price cost quote' },
+	{ group: 'pages', label: 'How we work', href: '/about/#process', keys: 'process how work steps' },
+	{ group: 'pages', label: 'FAQ', href: '/about/#faq', keys: 'faq questions help' },
+	{ group: 'pages', label: 'Privacy policy', href: '/privacy/', keys: 'privacy data legal' },
+	{ group: 'pages', label: 'Terms of use', href: '/terms/', keys: 'terms legal' },
+	{ group: 'actions', label: 'Copy email address', action: 'copy', keys: `email copy ${site.email}` },
+	{ group: 'actions', label: 'DM us on Instagram', href: site.instagram.dm, ext: true, keys: 'instagram dm message' },
+	{ group: 'actions', label: 'Back to top', action: 'top', keys: 'top up scroll' },
+	{ group: 'actions', label: 'Play pixel snake', action: 'snake', keys: 'game snake play secret pixel' },
+] as { group: string; label: string; href?: string; ext?: boolean; action?: string; keys: string }[];
 ---
-<header class="header">
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="header" data-header>
 	<div class="wrap bar">
-		<a href="/" aria-label="PixelWeb Digital home"><Logo /></a>
-		<input type="checkbox" id="menu" class="menu-toggle" aria-label="Open menu" />
-		<label for="menu" class="menu-btn" aria-hidden="true"><span></span><span></span></label>
-		<nav aria-label="Main">
-			{nav.map((item) => <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>)}
-			<a href="/contact/" class="btn btn-primary nav-cta" data-magnetic>Get a website</a>
+		<div class="left">
+			<a href="/" class="logo-link" data-logo aria-label="PixelWeb Digital home"><Logo /></a>
+			<span class="here note" data-here aria-hidden="true"></span>
+		</div>
+
+		<nav class="desk-nav" aria-label="Main" data-desk-nav>
+			<span class="nav-ind" aria-hidden="true" data-nav-ind></span>
+			{nav.map((item) => item.href === '/services/' ? (
+				<div class="has-mega">
+					<a href={item.href} class="nlink" data-nlink data-scramble aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}<span class="caret" aria-hidden="true">▾</span></a>
+					<div class="mega" aria-label="Services">
+						<div class="mega-inner">
+							<ul class="mega-list">
+								{megaItems.map((s) => (
+									<li>
+										<a href={`/services/#${s.id}`} class="mega-item">
+											<img src={s.thumb} alt="" width="64" height="48" loading="lazy" />
+											<span><strong>{s.title}</strong><span>{s.short}</span></span>
+										</a>
+									</li>
+								))}
+							</ul>
+							<a href="/services/#packages" class="mega-pkg">
+								<span class="note">&gt; packages</span>
+								<strong>Pick a starting point</strong>
+								<span>Starter, Business or Online store</span>
+								<span class="mega-go"><Icon name="arrow" size={20} /></span>
+							</a>
+						</div>
+					</div>
+				</div>
+			) : (
+				<a href={item.href} class="nlink" data-nlink data-scramble aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
+			))}
 		</nav>
+
+		<div class="right">
+			<span class="chip note" data-availability data-avail-style="short" data-tz={site.timeZone} data-days={site.hours.days.join(',')} data-open={site.hours.open} data-close={site.hours.close}>
+				<i aria-hidden="true"></i><span data-avail-text>available</span>
+			</span>
+			<button type="button" class="cmdk-btn" data-cmdk-open aria-label="Open quick search (Ctrl K)" title="Quick search (Ctrl K)">
+				<Icon name="search" size={18} /><kbd>⌘K</kbd>
+			</button>
+			<a href={cta.href} class="btn btn-primary nav-cta" target={cta.ext ? '_blank' : undefined} rel={cta.ext ? 'noopener' : undefined} data-magnetic>{cta.text}</a>
+			<button type="button" class="menu-btn" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu" data-menu-btn><span></span><span></span></button>
+		</div>
 	</div>
+	<div class="progress" aria-hidden="true"></div>
 </header>
 
+<!-- Full-screen menu (phones) -->
+<div class="mmenu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu" hidden data-mmenu>
+	<div class="mm-pixels" aria-hidden="true" data-mm-pixels></div>
+	<div class="mm-body">
+		<nav aria-label="Mobile">
+			<ol class="mm-links">
+				{nav.map((item, i) => (
+					<li><a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}><span class="note">0{i + 1}</span>{item.label}</a></li>
+				))}
+			</ol>
+		</nav>
+		<a class="btn btn-primary mm-cta" href="/contact/">Get a free consultation <Icon name="arrow" size={18} /></a>
+		<div class="mm-foot note">
+			<span class="mm-status" data-availability data-tz={site.timeZone} data-days={site.hours.days.join(',')} data-open={site.hours.open} data-close={site.hours.close}><i aria-hidden="true"></i><span data-avail-text></span></span>
+			<a href={`mailto:${site.email}`}>{site.email}</a>
+			<a href={site.instagram.href} target="_blank" rel="noopener">{site.instagram.handle}</a>
+			<span>{site.city} · <span data-mm-clock data-tz={site.timeZone}>--:--</span></span>
+		</div>
+	</div>
+</div>
+
+<!-- Command palette -->
+<div class="cmdk" role="dialog" aria-modal="true" aria-label="Quick search" hidden data-cmdk>
+	<div class="cmdk-box">
+		<div class="cmdk-input">
+			<span class="prompt" aria-hidden="true">&gt;</span>
+			<input type="text" placeholder="where to? try 'seo', 'packages', 'email'" aria-label="Search pages and actions" role="combobox" aria-expanded="true" aria-controls="cmdk-list" autocomplete="off" spellcheck="false" data-cmdk-input />
+			<kbd>esc</kbd>
+		</div>
+		<ul class="cmdk-list" id="cmdk-list" role="listbox" data-cmdk-list>
+			{commands.map((c, i) => (
+				<li role="option" id={`cmdk-${i}`} data-keys={`${c.label} ${c.keys}`.toLowerCase()} data-group={c.group}>
+					{c.href
+						? <a href={c.href} target={c.ext ? '_blank' : undefined} rel={c.ext ? 'noopener' : undefined} tabindex="-1"><span class="g note">{c.group}</span>{c.label}</a>
+						: <button type="button" data-action={c.action} data-value={c.action === 'copy' ? site.email : undefined} tabindex="-1"><span class="g note">{c.group}</span>{c.label}</button>}
+				</li>
+			))}
+			<li class="cmdk-empty note" data-cmdk-empty hidden>&gt; no_results. try "contact"</li>
+		</ul>
+		<p class="cmdk-help note">↑ ↓ to move · enter to open · esc to close</p>
+	</div>
+</div>
+
+<!-- Sticky call to action on phones -->
+{!onContact && <a class="m-cta" href="/contact/" data-m-cta>Get a free quote <Icon name="arrow" size={18} /></a>}
+
+<script>
+	import gsap from 'gsap';
+	import { startAvailability } from '../scripts/availability';
+	import { trigger as playSnake } from '../scripts/egg';
+
+	const root = document.documentElement;
+	const motion = root.classList.contains('motion');
+	const lenis = () => (window as any).__lenis;
+	const GLYPHS = '!<>-_\\/[]{}=+*^?#01';
+	startAvailability();
+
+	/* ---------- links: letters decode on hover ---------- */
+	document.querySelectorAll<HTMLElement>('[data-scramble]').forEach((link) => {
+		const textNode = [...link.childNodes].find((n) => n.nodeType === 3);
+		if (!textNode || !motion) return;
+		const real = textNode.textContent ?? '';
+		let raf = 0;
+		link.addEventListener('mouseenter', () => {
+			cancelAnimationFrame(raf);
+			const t0 = performance.now();
+			const run = (t: number) => {
+				const p = Math.min(1, (t - t0) / 380);
+				textNode.textContent = [...real].map((c, i) => (i / real.length < p ? c : c === ' ' ? ' ' : GLYPHS[Math.floor(Math.random() * GLYPHS.length)])).join('');
+				if (p < 1) raf = requestAnimationFrame(run);
+			};
+			raf = requestAnimationFrame(run);
+		});
+	});
+
+	/* ---------- lime block that glides between links ---------- */
+	const deskNav = document.querySelector<HTMLElement>('[data-desk-nav]');
+	const ind = document.querySelector<HTMLElement>('[data-nav-ind]');
+	if (deskNav && ind) {
+		const links = [...deskNav.querySelectorAll<HTMLElement>('[data-nlink]')];
+		const moveTo = (el: HTMLElement | undefined) => {
+			if (!el) { ind.style.opacity = '0'; return; }
+			const n = deskNav.getBoundingClientRect(), r = el.getBoundingClientRect();
+			ind.style.opacity = '1';
+			ind.style.transform = `translateX(${r.left - n.left}px)`;
+			ind.style.width = `${r.width}px`;
+		};
+		const active = () => links.find((l) => l.getAttribute('aria-current') === 'page');
+		links.forEach((l) => l.addEventListener('mouseenter', () => moveTo(l)));
+		deskNav.addEventListener('mouseleave', () => moveTo(active()));
+		addEventListener('resize', () => moveTo(active()));
+		document.fonts.ready.then(() => moveTo(active()));
+	}
+
+	/* ---------- logo pixels shuffle on hover ---------- */
+	const logo = document.querySelector<HTMLElement>('[data-logo]');
+	if (logo && motion) {
+		const rects = [...logo.querySelectorAll('rect')];
+		logo.addEventListener('mouseenter', () => {
+			gsap.to(rects, {
+				x: () => gsap.utils.random(-4, 4, 4), y: () => gsap.utils.random(-4, 4, 4),
+				duration: 0.18, ease: 'steps(2)', yoyo: true, repeat: 1, stagger: { amount: 0.2, from: 'random' }, overwrite: true,
+			});
+		});
+	}
+
+	/* ---------- compact header + "you are here" readout ---------- */
+	const header = document.querySelector<HTMLElement>('[data-header]')!;
+	const onScroll = () => header.classList.toggle('is-compact', scrollY > 140);
+	addEventListener('scroll', onScroll, { passive: true });
+	onScroll();
+
+	const here = document.querySelector<HTMLElement>('[data-here]');
+	if (here) {
+		const sections = [...document.querySelectorAll<HTMLElement>('main section')].filter((s) => s.querySelector('.kicker'));
+		const io = new IntersectionObserver((entries) => {
+			entries.forEach((e) => {
+				if (!e.isIntersecting) return;
+				const k = e.target.querySelector('.kicker')?.textContent?.trim().replace(/^(\/\/|>)\s*/, '') ?? '';
+				here.textContent = k ? `> ${k.replace(/\s+/g, '_').replace(/[^\w-]/g, '').slice(0, 26)}` : '';
+			});
+		}, { rootMargin: '-35% 0px -60% 0px' });
+		sections.forEach((s) => io.observe(s));
+	}
+
+	/* ---------- sticky call to action on phones ---------- */
+	const mcta = document.querySelector<HTMLElement>('[data-m-cta]');
+	const footer = document.querySelector('[data-footer]');
+	if (mcta) {
+		let footerVisible = false;
+		const set = () => mcta.classList.toggle('show', scrollY > innerHeight * 0.6 && !footerVisible && !root.classList.contains('menu-open'));
+		if (footer) new IntersectionObserver(([e]) => { footerVisible = e.isIntersecting; set(); }).observe(footer);
+		addEventListener('scroll', set, { passive: true });
+		set();
+	}
+
+	/* ---------- full-screen phone menu ---------- */
+	const menu = document.querySelector<HTMLElement>('[data-mmenu]')!;
+	const menuBtn = document.querySelector<HTMLButtonElement>('[data-menu-btn]')!;
+	const pixelsBox = menu.querySelector<HTMLElement>('[data-mm-pixels]')!;
+	const mmLinks = [...menu.querySelectorAll<HTMLElement>('.mm-links li, .mm-cta, .mm-foot')];
+	let pixels: HTMLElement[] = [];
+	const buildPixels = () => {
+		const cols = 6, rows = Math.ceil((innerHeight / innerWidth) * cols);
+		pixelsBox.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+		pixels = Array.from({ length: cols * rows }, () => document.createElement('i'));
+		pixelsBox.replaceChildren(...pixels);
+	};
+	let lastFocus: HTMLElement | null = null;
+
+	function openMenu() {
+		lastFocus = document.activeElement as HTMLElement;
+		menu.hidden = false;
+		root.classList.add('menu-open');
+		menuBtn.setAttribute('aria-expanded', 'true');
+		menuBtn.setAttribute('aria-label', 'Close menu');
+		lenis()?.stop();
+		mcta?.classList.remove('show');
+		if (motion) {
+			buildPixels();
+			gsap.timeline()
+				.fromTo(pixels, { scale: 0 }, { scale: 1, duration: 0.25, ease: 'power2.out', stagger: { amount: 0.25, from: 'random' } })
+				.to(pixels, { scale: 0, duration: 0.3, ease: 'power2.in', stagger: { amount: 0.3, from: 'random' } })
+				.fromTo(mmLinks, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'expo.out', stagger: 0.06 }, '-=0.35');
+		}
+		menu.querySelector<HTMLElement>('.mm-links a')?.focus();
+	}
+	function closeMenu(restoreFocus = true) {
+		if (menu.hidden) return;
+		menu.hidden = true;
+		root.classList.remove('menu-open');
+		menuBtn.setAttribute('aria-expanded', 'false');
+		menuBtn.setAttribute('aria-label', 'Open menu');
+		lenis()?.start();
+		if (restoreFocus) (lastFocus && lastFocus !== document.body ? lastFocus : menuBtn).focus();
+	}
+	menuBtn.addEventListener('click', () => (menu.hidden ? openMenu() : closeMenu()));
+	menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => closeMenu(false)));
+	matchMedia('(min-width: 861px)').addEventListener('change', (e) => e.matches && closeMenu(false));
+
+	// Keep keyboard focus inside the open menu (plus the close button), and close on Escape.
+	document.addEventListener('keydown', (e) => {
+		if (menu.hidden) return;
+		if (e.key === 'Escape') return closeMenu();
+		if (e.key !== 'Tab') return;
+		const focusables = [menuBtn, ...menu.querySelectorAll<HTMLElement>('a, button')];
+		const i = focusables.indexOf(document.activeElement as HTMLElement);
+		const next = e.shiftKey ? (i <= 0 ? focusables.length - 1 : i - 1) : (i === focusables.length - 1 ? 0 : i + 1);
+		e.preventDefault();
+		focusables[next].focus();
+	});
+
+	// Clock in the menu
+	const mmClock = menu.querySelector<HTMLElement>('[data-mm-clock]');
+	if (mmClock) {
+		const fmt = new Intl.DateTimeFormat('en-IN', { timeZone: mmClock.dataset.tz, hour: 'numeric', minute: '2-digit', hour12: true });
+		const tick = () => void (mmClock.textContent = fmt.format(new Date()));
+		tick();
+		setInterval(tick, 30_000);
+	}
+
+	/* ---------- command palette ---------- */
+	const cmdk = document.querySelector<HTMLElement>('[data-cmdk]')!;
+	const input = cmdk.querySelector<HTMLInputElement>('[data-cmdk-input]')!;
+	const items = [...cmdk.querySelectorAll<HTMLElement>('[role="option"]')];
+	const empty = cmdk.querySelector<HTMLElement>('[data-cmdk-empty]')!;
+	let sel = 0;
+	const visible = () => items.filter((i) => !i.hidden);
+	const highlight = () => {
+		const v = visible();
+		sel = Math.max(0, Math.min(sel, v.length - 1));
+		items.forEach((i) => i.setAttribute('aria-selected', 'false'));
+		if (v[sel]) {
+			v[sel].setAttribute('aria-selected', 'true');
+			input.setAttribute('aria-activedescendant', v[sel].id);
+			v[sel].scrollIntoView({ block: 'nearest' });
+		}
+	};
+	const filter = () => {
+		const q = input.value.trim().toLowerCase();
+		items.forEach((i) => (i.hidden = !!q && !q.split(/\s+/).every((w) => (i.dataset.keys ?? '').includes(w))));
+		empty.hidden = visible().length > 0;
+		sel = 0;
+		highlight();
+	};
+	let cmdkFocus: HTMLElement | null = null;
+	function openCmdk() {
+		if (!cmdk.hidden) return;
+		closeMenu(false);
+		cmdkFocus = document.activeElement as HTMLElement;
+		cmdk.hidden = false;
+		lenis()?.stop();
+		input.value = '';
+		filter();
+		input.focus();
+		// Animate opacity only: a visibility:hidden input can't take focus.
+		if (motion) gsap.fromTo(cmdk.querySelector('.cmdk-box'), { y: -16, opacity: 0, scale: 0.98 }, { y: 0, opacity: 1, scale: 1, duration: 0.35, ease: 'expo.out' });
+	}
+	function closeCmdk() {
+		if (cmdk.hidden) return;
+		cmdk.hidden = true;
+		lenis()?.start();
+		cmdkFocus?.focus();
+	}
+	async function run(item: HTMLElement | undefined) {
+		const el = item?.querySelector<HTMLElement>('a, button');
+		if (!el) return;
+		const action = el.dataset.action;
+		closeCmdk();
+		if (!action) return el.click();
+		if (action === 'top') return lenis() ? lenis().scrollTo(0, { duration: 1.4 }) : scrollTo({ top: 0, behavior: 'smooth' });
+		if (action === 'snake') return playSnake();
+		if (action === 'copy') {
+			try { await navigator.clipboard.writeText(el.dataset.value ?? ''); flash('> copied_to_clipboard ✓'); }
+			catch { flash(`Copy this: ${el.dataset.value}`); }
+		}
+	}
+	// Small toast for the copy action (reuses the one on the Contact page if it's there).
+	function flash(text: string) {
+		let t = document.querySelector<HTMLElement>('[data-hdr-toast]');
+		if (!t) { t = document.createElement('div'); t.className = 'hdr-toast note'; t.dataset.hdrToast = ''; t.setAttribute('role', 'status'); document.body.append(t); }
+		t.textContent = text;
+		t.classList.add('show');
+		setTimeout(() => t!.classList.remove('show'), 2200);
+	}
+	input.addEventListener('input', filter);
+	input.addEventListener('keydown', (e) => {
+		if (e.key === 'ArrowDown') { e.preventDefault(); sel++; highlight(); }
+		else if (e.key === 'ArrowUp') { e.preventDefault(); sel--; highlight(); }
+		else if (e.key === 'Enter') { e.preventDefault(); run(visible()[sel]); }
+		else if (e.key === 'Escape') closeCmdk();
+		else if (e.key === 'Tab') e.preventDefault();
+	});
+	items.forEach((i) => {
+		i.addEventListener('mousemove', () => { sel = visible().indexOf(i); highlight(); });
+		// Links navigate normally (the page transition picks them up); action buttons run their action.
+		i.querySelector('a')?.addEventListener('click', () => closeCmdk());
+		i.querySelector('button')?.addEventListener('click', () => run(i));
+	});
+	cmdk.addEventListener('click', (e) => { if (e.target === cmdk) closeCmdk(); });
+	document.querySelector('[data-cmdk-open]')?.addEventListener('click', openCmdk);
+	document.addEventListener('keydown', (e) => {
+		const t = e.target;
+		const typing = t instanceof Element && !!t.closest('input, textarea, select, [contenteditable]');
+		if ((e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !typing)) {
+			e.preventDefault();
+			cmdk.hidden ? openCmdk() : closeCmdk();
+		}
+	});
+	// Show the right shortcut for Windows/Linux.
+	if (!/Mac|iPhone|iPad/.test(navigator.platform)) document.querySelectorAll('.cmdk-btn kbd').forEach((k) => (k.textContent = 'Ctrl K'));
+</script>
+
 <style>
+	/* Skip link: hidden until focused with the keyboard */
+	.skip { position: fixed; left: 1rem; top: -4rem; z-index: 200; background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 0.7rem 1rem; border-radius: 0.5rem; transition: top 0.2s; }
+	.skip:focus { top: 1rem; }
+
 	.header {
 		position: sticky; top: 0; z-index: 50; background: rgb(11 11 11 / 0); border-bottom: 1px solid transparent;
 		transition: transform 0.5s cubic-bezier(0.7, 0, 0.2, 1), background 0.3s, border-color 0.3s;
 	}
-	.header.is-scrolled { background: rgb(11 11 11 / 0.8); backdrop-filter: blur(12px); border-bottom-color: var(--line); }
+	.header.is-scrolled, .header.is-compact { background: rgb(11 11 11 / 0.8); backdrop-filter: blur(12px); border-bottom-color: var(--line); }
 	.header.is-hidden { transform: translateY(-100%); }
 	:global(html:not(.motion)) .header { background: rgb(11 11 11 / 0.85); backdrop-filter: blur(12px); border-bottom-color: var(--line); }
-	.bar { display: flex; align-items: center; justify-content: space-between; height: 4.5rem; }
-	nav { display: flex; align-items: center; gap: 2rem; }
-	nav a:not(.btn) { color: var(--fg-2); font-weight: 500; transition: color 0.15s; }
-	nav a:not(.btn):hover, nav a[aria-current='page'] { color: var(--fg); }
-	nav a[aria-current='page']::before { content: '> '; color: var(--accent); font-family: var(--mono); }
-	.nav-cta { padding: 0.6rem 1.15rem; font-size: 0.95rem; }
-	.menu-toggle, .menu-btn { display: none; }
+	:global(html.menu-open) .header { z-index: 90; transform: none; background: transparent; backdrop-filter: none; border-bottom-color: transparent; }
 
-	@media (max-width: 760px) {
-		.menu-btn { display: grid; gap: 6px; padding: 0.75rem; margin-right: -0.75rem; cursor: pointer; }
-		.menu-btn span { display: block; width: 22px; height: 2px; background: var(--fg); transition: transform 0.2s; }
-		.menu-toggle:checked + .menu-btn span:first-child { transform: translateY(4px) rotate(45deg); }
-		.menu-toggle:checked + .menu-btn span:last-child { transform: translateY(-4px) rotate(-45deg); }
-		nav {
-			display: none; position: absolute; inset: 4.5rem 0 auto; flex-direction: column; align-items: stretch;
-			gap: 0; padding: 0.5rem 1.25rem 1.5rem; background: var(--bg); border-bottom: 1px solid var(--line);
+	.bar { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; height: 4.5rem; transition: height 0.35s cubic-bezier(0.7, 0, 0.2, 1); }
+	.is-compact .bar { height: 3.6rem; }
+	.left { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+	.logo-link :global(.logo-word) { transition: opacity 0.3s, max-width 0.4s; max-width: 14rem; overflow: hidden; display: inline-block; }
+	.is-compact .logo-link :global(.logo-word) { opacity: 0; max-width: 0; }
+	.here { color: var(--accent); white-space: nowrap; opacity: 0; transition: opacity 0.3s; }
+	.is-compact .here:not(:empty) { opacity: 1; }
+
+	/* Desktop links */
+	.desk-nav { position: relative; display: flex; align-items: center; gap: 0.25rem; }
+	.nlink { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.5rem 0.85rem; color: var(--fg-2); font-weight: 500; transition: color 0.2s; white-space: nowrap; }
+	.nlink:hover, .nlink[aria-current='page'] { color: var(--fg); }
+	.caret { font-size: 0.7em; color: var(--fg-3); transition: transform 0.3s; }
+	.nav-ind { position: absolute; left: 0; bottom: -0.15rem; height: 3px; width: 0; background: var(--accent); opacity: 0; transition: transform 0.4s cubic-bezier(0.7, 0, 0.2, 1), width 0.4s cubic-bezier(0.7, 0, 0.2, 1), opacity 0.3s; pointer-events: none; }
+	:global(html:not(.motion)) .nlink[aria-current='page'] { box-shadow: inset 0 -3px var(--accent); }
+
+	/* Mega menu */
+	.has-mega { position: relative; }
+	.has-mega:hover .caret, .has-mega:focus-within .caret { transform: rotate(180deg); color: var(--accent); }
+	.mega { position: absolute; left: 50%; top: 100%; padding-top: 0.9rem; width: min(46rem, 90vw); transform: translate(-50%, 8px); opacity: 0; visibility: hidden; transition: opacity 0.25s, transform 0.3s, visibility 0.25s; }
+	.has-mega:hover .mega, .has-mega:focus-within .mega { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0.08s; }
+	.mega-inner { display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.75rem; background: #0e0e0e; border: 1px solid var(--line); border-radius: 1rem; padding: 0.75rem; box-shadow: 0 30px 80px rgb(0 0 0 / 0.6); }
+	.mega-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
+	.mega-item { display: flex; align-items: center; gap: 0.85rem; padding: 0.55rem; border-radius: 0.6rem; transition: background 0.2s; }
+	.mega-item:hover, .mega-item:focus-visible { background: var(--card); }
+	.mega-item img { width: 4rem; height: 3rem; object-fit: cover; border-radius: 0.4rem; flex: none; filter: grayscale(0.6); transition: filter 0.3s; }
+	.mega-item:hover img { filter: none; }
+	.mega-item strong { display: block; font-size: 0.98rem; }
+	.mega-item span span { display: block; font-size: 0.85rem; color: var(--fg-3); }
+	.mega-pkg { position: relative; display: grid; align-content: end; gap: 0.3rem; padding: 1.25rem; border-radius: 0.75rem; background: var(--accent); color: var(--accent-ink); }
+	.mega-pkg .note { color: var(--accent-ink); opacity: 0.7; }
+	.mega-pkg strong { font-size: 1.35rem; letter-spacing: -0.02em; line-height: 1.1; }
+	.mega-pkg span:not(.note):not(.mega-go) { font-size: 0.9rem; }
+	.mega-go { position: absolute; top: 1.1rem; right: 1.1rem; transition: transform 0.3s; }
+	.mega-pkg:hover .mega-go { transform: rotate(-45deg); }
+
+	/* Right side */
+	.right { display: flex; align-items: center; gap: 0.6rem; }
+	.chip { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.35rem 0.65rem; border: 1px solid var(--line); border-radius: 999px; color: var(--fg-2); white-space: nowrap; }
+	.chip i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--fg-3); }
+	.chip.is-open i, .mm-status.is-open i { background: var(--accent); animation: chip-ping 1.6s infinite; }
+	@keyframes chip-ping { 0% { box-shadow: 0 0 0 0 rgb(163 230 53 / 0.6); } 70%, 100% { box-shadow: 0 0 0 6px rgb(163 230 53 / 0); } }
+	.cmdk-btn { display: inline-flex; align-items: center; gap: 0.45rem; height: 2.4rem; padding: 0 0.7rem; border: 1px solid var(--line); background: transparent; color: var(--fg-2); border-radius: 0.6rem; cursor: pointer; font: inherit; transition: border-color 0.2s, color 0.2s; }
+	.cmdk-btn:hover { border-color: var(--fg-3); color: var(--fg); }
+	kbd { font-family: var(--mono); font-size: 0.72rem; font-weight: 700; color: var(--fg-3); border: 1px solid var(--line); border-radius: 0.3rem; padding: 0.05rem 0.35rem; }
+	.nav-cta { position: relative; overflow: hidden; isolation: isolate; padding: 0.6rem 1.15rem; font-size: 0.95rem; transition: padding 0.35s, transform 0.15s; }
+	/* Pixel fill on hover: dark squares step in over the lime button */
+	.nav-cta::before { content: ''; position: absolute; inset: 0; z-index: -1; background: #0b0b0b; clip-path: inset(0 100% 0 0); transition: clip-path 0.4s steps(6); }
+	.nav-cta:hover { color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+	.nav-cta:hover::before { clip-path: inset(0 0 0 0); }
+	.is-compact .nav-cta { padding: 0.45rem 0.95rem; }
+	.menu-btn { display: none; }
+
+	.progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; pointer-events: none; }
+	:global(html:not(.motion)) .progress { display: none; }
+
+	/* Full-screen menu */
+	.mmenu { position: fixed; inset: 0; z-index: 80; background: var(--bg); display: grid; }
+	.mmenu[hidden] { display: none; }
+	.mm-pixels { position: absolute; inset: 0; display: grid; pointer-events: none; z-index: 2; }
+	.mm-pixels :global(i) { background: var(--accent); transform: scale(0); aspect-ratio: 1; }
+	.mm-body { position: relative; z-index: 1; display: grid; align-content: space-between; gap: 2rem; padding: 6rem 1.25rem 2rem; overflow-y: auto; }
+	.mm-links { list-style: none; margin: 0; padding: 0; display: grid; }
+	.mm-links a { display: flex; align-items: baseline; gap: 1rem; padding: 0.6rem 0; font-size: clamp(2.6rem, 12vw, 4rem); font-weight: 700; letter-spacing: -0.045em; border-bottom: 1px solid var(--line); }
+	.mm-links .note { color: var(--accent); font-size: 0.85rem; }
+	.mm-links a[aria-current='page'] { color: var(--accent); }
+	.mm-cta { justify-self: start; }
+	.mm-foot { display: grid; gap: 0.6rem; color: var(--fg-2); }
+	.mm-foot a { color: var(--fg); }
+	.mm-status { display: inline-flex; align-items: center; gap: 0.5rem; }
+	.mm-status i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--fg-3); }
+
+	/* Command palette */
+	.cmdk { position: fixed; inset: 0; z-index: 110; display: grid; justify-items: center; align-items: start; padding: 12vh 1rem 1rem; background: rgb(0 0 0 / 0.6); backdrop-filter: blur(6px); }
+	.cmdk[hidden] { display: none; }
+	.cmdk-box { width: min(100%, 36rem); background: #0b0b0b; border: 1px solid var(--line); border-radius: 1rem; overflow: hidden; box-shadow: 0 30px 80px rgb(0 0 0 / 0.6); }
+	.cmdk-input { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.1rem; border-bottom: 1px solid var(--line); }
+	.prompt { color: var(--accent); font-family: var(--mono); font-weight: 700; }
+	.cmdk-input input { flex: 1; min-width: 0; background: none; border: 0; color: var(--fg); font: inherit; font-size: 1.05rem; outline: none; }
+	.cmdk-input input::placeholder { color: #555; }
+	.cmdk-list { list-style: none; margin: 0; padding: 0.4rem; max-height: min(22rem, 55vh); overflow-y: auto; }
+	.cmdk-list li[hidden] { display: none; }
+	.cmdk-list a, .cmdk-list button { display: flex; align-items: center; gap: 0.75rem; width: 100%; padding: 0.7rem 0.75rem; border-radius: 0.55rem; color: var(--fg); font: inherit; text-align: left; background: none; border: 0; cursor: pointer; }
+	.cmdk-list [aria-selected='true'] > * { background: var(--card); box-shadow: inset 3px 0 var(--accent); }
+	.g { width: 4.5rem; flex: none; color: var(--fg-3); font-size: 0.72rem; }
+	.cmdk-empty { padding: 1rem 0.75rem; color: var(--fg-3); }
+	.cmdk-help { margin: 0; padding: 0.6rem 1.1rem; border-top: 1px solid var(--line); color: var(--fg-3); font-size: 0.75rem; }
+
+	/* Sticky phone call to action */
+	.m-cta { display: none; }
+
+	@media (max-width: 1100px) { .chip { display: none; } }
+	@media (max-width: 960px) { .here { display: none; } .cmdk-btn kbd { display: none; } }
+	@media (max-width: 860px) {
+		.desk-nav, .nav-cta, .cmdk-btn { display: none; }
+		.menu-btn { display: grid; gap: 6px; padding: 0.75rem; margin-right: -0.75rem; background: none; border: 0; cursor: pointer; }
+		.menu-btn span { display: block; width: 24px; height: 2px; background: var(--fg); transition: transform 0.3s; }
+		.menu-btn[aria-expanded='true'] span:first-child { transform: translateY(4px) rotate(45deg); }
+		.menu-btn[aria-expanded='true'] span:last-child { transform: translateY(-4px) rotate(-45deg); }
+		.m-cta {
+			display: flex; align-items: center; justify-content: center; gap: 0.5rem; position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 45;
+			background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 0.95rem 1rem; border-radius: 999px;
+			box-shadow: 0 12px 30px rgb(0 0 0 / 0.5); transform: translateY(160%); transition: transform 0.45s cubic-bezier(0.3, 1.3, 0.5, 1);
 		}
-		.menu-toggle:checked ~ nav { display: flex; }
-		nav a:not(.btn) { padding: 0.9rem 0; font-size: 1.25rem; border-bottom: 1px solid var(--line); }
-		.nav-cta { margin-top: 1.25rem; justify-content: center; }
+		.m-cta.show { transform: none; }
 	}
+</style>
+
+<style is:global>
+	main:focus { outline: none; }
+	.hdr-toast {
+		position: fixed; left: 50%; bottom: 1.5rem; z-index: 130; transform: translate(-50%, 160%);
+		background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 0.7rem 1.1rem; border-radius: 0.5rem;
+		transition: transform 0.4s cubic-bezier(0.3, 1.4, 0.5, 1);
+	}
+	.hdr-toast.show { transform: translate(-50%, 0); }
 </style>

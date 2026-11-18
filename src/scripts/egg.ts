@@ -4,7 +4,7 @@
 const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 const LIME = '#a3e635';
 
-function trigger() {
+export function trigger() {
 	if (document.querySelector('.snake')) return;
 	(window as any).__wordmark?.burst?.();
 	setTimeout(openSnake, (window as any).__wordmark ? 700 : 0);

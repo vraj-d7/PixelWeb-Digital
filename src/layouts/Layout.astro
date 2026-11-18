@@ -44,9 +44,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 	</head>
 	<body>
 		<Loader />
-		<div class="progress" aria-hidden="true"></div>
 		<Header />
-		<main><slot /></main>
+		<main id="main" tabindex="-1"><slot /></main>
 		<Footer />
 		<script>
 			import '../scripts/motion';

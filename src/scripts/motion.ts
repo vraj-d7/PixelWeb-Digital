@@ -29,9 +29,8 @@ function smoothScroll() {
 
 	// Hide the header while scrolling down, bring it back on the way up.
 	const header = document.querySelector<HTMLElement>('.header');
-	const menu = document.getElementById('menu') as HTMLInputElement | null;
 	lenis.on('scroll', ({ scroll, direction }: Lenis) => {
-		if (!header || menu?.checked) return;
+		if (!header || root.classList.contains('menu-open')) return;
 		header.classList.toggle('is-hidden', direction === 1 && scroll > 160);
 		header.classList.toggle('is-scrolled', scroll > 20);
 	});
@@ -105,8 +104,6 @@ function pageTransitions() {
 			return;
 		}
 		e.preventDefault();
-		const menu = document.getElementById('menu') as HTMLInputElement | null;
-		if (menu) menu.checked = false;
 		leaveTo(url.href);
 	});
 	// Coming back with the browser's back button restores a covered page from cache: uncover it.
