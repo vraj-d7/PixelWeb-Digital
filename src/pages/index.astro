@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Icon from '../components/Icon.astro';
-import CtaBand from '../components/CtaBand.astro';
 import Marquee from '../components/Marquee.astro';
 import { getImage } from 'astro:assets';
 import { steps, services } from '../data/site';
@@ -89,7 +88,6 @@ const previews = await Promise.all(services.map((s) => getImage({ src: s.image, 
 		</div>
 	</section>
 
-	<CtaBand />
 </Layout>
 
 <style>
