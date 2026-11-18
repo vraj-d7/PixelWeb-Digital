@@ -13,6 +13,7 @@
 	--sans: 'Space Grotesk', system-ui, sans-serif;
 	--mono: 'JetBrains Mono', ui-monospace, monospace;
 	color-scheme: dark;
+	interpolate-size: allow-keywords; /* lets FAQ answers animate open to their natural height */
 }
 
 *, *::before, *::after { box-sizing: border-box; }

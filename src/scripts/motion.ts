@@ -269,6 +269,119 @@ function pointerFx() {
 	document.addEventListener('pointerleave', () => gsap.to(cursor, { opacity: 0, duration: 0.3 }));
 }
 
+/* ---------- About page ---------- */
+// Resolves once the loader has cleared, so things at the top of a page don't animate behind it.
+let revealResolve: () => void = () => {};
+const revealed = new Promise<void>((r) => (revealResolve = r));
+
+// "How we work": pinned while you scroll through the three steps (wide screens only).
+function processPin() {
+	const sec = document.querySelector<HTMLElement>('[data-process]');
+	if (!sec) return;
+	const steps = [...sec.querySelectorAll<HTMLElement>('[data-step]')];
+	const visuals = [...sec.querySelectorAll<HTMLElement>('[data-visual]')];
+	const bar = sec.querySelector<HTMLElement>('.process-bar i');
+	let cur = 0;
+	const set = (i: number) => {
+		if (i === cur) return;
+		cur = i;
+		steps.forEach((s, k) => s.classList.toggle('is-active', k === i));
+		visuals.forEach((v, k) => v.classList.toggle('is-active', k === i));
+	};
+	steps.forEach((s, i) => s.addEventListener('click', () => set(i)));
+	gsap.matchMedia().add('(min-width: 901px)', () => {
+		const st = ScrollTrigger.create({
+			trigger: sec, start: 'top top', end: '+=180%', pin: true, scrub: true,
+			onUpdate: (s) => {
+				set(Math.min(steps.length - 1, Math.floor(s.progress * steps.length)));
+				if (bar) bar.style.transform = `scaleX(${Math.max(0.02, s.progress)})`;
+			},
+		});
+		return () => st.kill();
+	});
+}
+
+// Terminal card: types each command, then shows its answer.
+function terminalTyping() {
+	document.querySelectorAll<HTMLElement>('[data-terminal]').forEach((term) => {
+		const items = [...term.querySelectorAll<HTMLElement>('.term-body > li:not(.caret)')];
+		const tl = gsap.timeline({ paused: true });
+		gsap.set(items, { autoAlpha: 0 });
+		term.classList.add('typed');
+		items.forEach((li) => {
+			const cmd = li.querySelector<HTMLElement>('[data-cmd]');
+			const out = li.querySelector<HTMLElement>('[data-out]');
+			if (!cmd || !out) return;
+			const text = cmd.dataset.cmd ?? '';
+			const s = { n: 0 };
+			cmd.textContent = '';
+			tl.set(li, { autoAlpha: 1 })
+				.set(out, { autoAlpha: 0 })
+				.to(s, { n: text.length, duration: text.length * 0.055, ease: 'none', onUpdate: () => void (cmd.textContent = text.slice(0, Math.round(s.n))) })
+				.to(out, { autoAlpha: 1, duration: 0.15 }, '+=0.12');
+		});
+		revealed.then(() => ScrollTrigger.create({ trigger: term, start: 'top 90%', once: true, onEnter: () => void tl.play() }));
+	});
+}
+
+// Numbers count up when they scroll into view.
+function countUps() {
+	document.querySelectorAll<HTMLElement>('[data-count]').forEach((el) => {
+		const end = Number(el.dataset.count) || 0;
+		const s = { v: 0 };
+		el.textContent = '0';
+		ScrollTrigger.create({
+			trigger: el, start: 'top 90%', once: true,
+			onEnter: () => void gsap.to(s, { v: end, duration: end > 10 ? 1.6 : 0.9, ease: 'power2.out', onUpdate: () => void (el.textContent = String(Math.round(s.v))) }),
+		});
+	});
+}
+
+// Timeline: the lime line grows as you scroll, and each step's square lights up as the line reaches it.
+function timelineFx() {
+	const tl = document.querySelector<HTMLElement>('[data-timeline]');
+	if (!tl) return;
+	gsap.to(tl.querySelector('.tl-line i'), { scaleY: 1, ease: 'none', scrollTrigger: { trigger: tl, start: 'top 70%', end: 'bottom 70%', scrub: 0.3 } });
+	tl.querySelectorAll<HTMLElement>('.tl-item').forEach((item) => {
+		ScrollTrigger.create({ trigger: item, start: 'top 70%', toggleClass: { targets: item, className: 'is-on' } });
+	});
+}
+
+// Team photos: start as big pixels and sharpen into place; pixelate again briefly on hover.
+function pixelateImages() {
+	document.querySelectorAll<HTMLImageElement>('img[data-pixelate]').forEach(async (img) => {
+		try { await img.decode(); } catch { return; } // if the photo can't load, just leave the plain <img>
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return;
+		img.after(canvas);
+		const s = { b: 48 };
+		const draw = () => {
+			const w = canvas.clientWidth, h = canvas.clientHeight;
+			if (!w || !h) return;
+			canvas.width = w; canvas.height = h;
+			const b = Math.max(1, s.b);
+			const sw = Math.max(1, Math.ceil(w / b)), sh = Math.max(1, Math.ceil(h / b));
+			// Crop like object-fit: cover.
+			const ir = img.naturalWidth / img.naturalHeight, cr = w / h;
+			let sx = 0, sy = 0, sW = img.naturalWidth, sH = img.naturalHeight;
+			if (ir > cr) { sW = sH * cr; sx = (img.naturalWidth - sW) / 2; } else { sH = sW / cr; sy = (img.naturalHeight - sH) / 2; }
+			ctx.imageSmoothingEnabled = false;
+			ctx.drawImage(img, sx, sy, sW, sH, 0, 0, sw, sh);
+			ctx.drawImage(canvas, 0, 0, sw, sh, 0, 0, w, h);
+		};
+		const sharpen = () => gsap.to(s, { b: 1, duration: 1.4, ease: 'steps(12)', onUpdate: draw, onComplete: () => void (canvas.style.opacity = '0') });
+		img.style.visibility = 'hidden';
+		draw();
+		img.style.visibility = '';
+		ScrollTrigger.create({ trigger: img, start: 'top 85%', once: true, onEnter: sharpen });
+		img.closest('.person')?.addEventListener('pointerenter', () => {
+			canvas.style.opacity = '1';
+			gsap.fromTo(s, { b: 16 }, { b: 1, duration: 0.6, ease: 'steps(6)', onUpdate: draw, onComplete: () => void (canvas.style.opacity = '0'), overwrite: true });
+		});
+	});
+}
+
 /* ---------- service rows: photo follows the cursor ---------- */
 function servicePreview() {
 	const list = document.querySelector<HTMLElement>('.svc-list');
@@ -347,14 +460,20 @@ if (motion) {
 			loader?.style.setProperty('animation', 'none');
 			smoothScroll();
 			pageTransitions();
+			processPin(); // pins first, so triggers further down the page are measured after the pin spacing
 			textReveals();
+			terminalTyping();
+			countUps();
+			timelineFx();
+			pixelateImages();
 			marquees();
 			spotlights();
 			const giant = document.querySelector<HTMLElement>('.giant-wrap');
 			if (giant) wordmark(giant);
 			if (finePointer) { pointerFx(); servicePreview(); }
 			const hero = heroIn().pause();
-			intro(() => void hero.play());
+			intro(() => { hero.play(); revealResolve(); });
+			ScrollTrigger.refresh();
 		} catch (err) {
 			// Never leave the page covered if something goes wrong.
 			root.classList.remove('motion');

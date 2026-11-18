@@ -1,7 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Icon from '../components/Icon.astro';
-import { steps } from '../data/site';
+import Marquee from '../components/Marquee.astro';
+import { getImage } from 'astro:assets';
+import { faq, process, stats, story, team, terminal, testimonials, timeline, tools } from '../data/about';
+
+// Placeholder entries only show while previewing locally, never on the live site.
+const dev = import.meta.env.DEV;
+const people = team.filter((m) => dev || !m.placeholder);
+const quotes = testimonials.filter((t) => dev || !t.placeholder);
+const photos = await Promise.all(people.map((m) => (m.photo ? getImage({ src: m.photo, width: 640, format: 'webp', quality: 78 }) : null)));
 
 const values = [
 	{ title: 'One team, start to finish', body: 'The people who design your site are the people who build it. No handoffs, nothing lost in translation.' },
@@ -9,37 +17,40 @@ const values = [
 	{ title: 'Built to bring customers', body: 'Pretty is the minimum. Every page is planned around getting visitors to call, book or buy.' },
 	{ title: 'We stick around', body: 'Launch is not goodbye. We test everything and support your site after it goes live.' },
 ];
+
+// Pixel "?" used as the avatar for people without a photo yet.
+const qmark = ['..####..', '.##..##.', '.....##.', '....##..', '...##...', '...##...', '........', '...##...'];
+const qcells = qmark.flatMap((row, y) => [...row].map((c, x) => (c === '#' ? [x, y] : null)).filter(Boolean)) as number[][];
 ---
 <Layout title="About" description="PixelWeb Digital is one team that designs and develops websites for small businesses, startups and personal brands, from first sketch to launch.">
-	<section class="section">
-		<div class="wrap stack">
-			<p class="kicker">who we are</p>
-			<h1 data-split>We design <span class="accent">and</span> develop websites.</h1>
-			<p class="lead" data-reveal>PixelWeb Digital is a small studio that builds online homes for small businesses, startups and personal brands. One team from first sketch to final launch — no handoffs, no tech headaches for you.</p>
+	<!-- Hero + terminal card -->
+	<section class="section about-hero">
+		<div class="wrap hero-grid">
+			<div class="stack">
+				<p class="kicker">who we are</p>
+				<h1 data-split>We design <span class="accent">and</span> develop websites.</h1>
+				<p class="lead" data-reveal>PixelWeb Digital is a small studio that builds online homes for small businesses, startups and personal brands. One team from first sketch to final launch — no handoffs, no tech headaches for you.</p>
+			</div>
+			<div class="term" data-reveal data-terminal aria-label="About PixelWeb in short">
+				<div class="term-bar" aria-hidden="true"><i></i><i></i><i></i><span>pixelweb — zsh</span></div>
+				<ul class="term-body">
+					{terminal.map(([cmd, out]) => (
+						<li>
+							<p class="cmd"><span class="prompt" aria-hidden="true">~ $</span> <span data-cmd={cmd}>{cmd}</span></p>
+							<p class="out" data-out>{out}</p>
+						</li>
+					))}
+					<li class="caret" aria-hidden="true"><span class="prompt">~ $</span> <span class="blink">▌</span></li>
+				</ul>
+			</div>
 		</div>
 	</section>
 
-	<section class="section alt">
-		<div class="wrap stack">
-			<p class="kicker">how we work</p>
-			<h2 data-split>Three steps to <span class="accent">live.</span></h2>
-			<ol class="grid-3 steps">
-				{steps.map((step, i) => (
-					<li class="card" data-reveal data-spot>
-						<span class="num">0{i + 1}</span>
-						<span class="icon"><Icon name={step.icon} size={36} /></span>
-						<h3>{step.title}</h3>
-						<p>{step.body}</p>
-					</li>
-				))}
-			</ol>
-		</div>
-	</section>
-
-	<section class="section">
-		<div class="wrap stack">
-			<p class="kicker">what you can expect</p>
-			<h2 data-split>The way we work.</h2>
+	<!-- Story + values -->
+	<section class="section story">
+		<div class="wrap">
+			<p class="kicker" data-reveal>our story</p>
+			<p class="statement" data-scrub>{story}</p>
 			<div class="values">
 				{values.map((v) => (
 					<div class="value" data-reveal>
@@ -51,15 +62,344 @@ const values = [
 		</div>
 	</section>
 
+	<!-- Team -->
+	{people.length > 0 && (
+		<section class="section alt">
+			<div class="wrap stack">
+				<p class="kicker" data-reveal>the people</p>
+				<h2 data-split>Real humans, <span class="accent">one team.</span></h2>
+				<div class="team">
+					{people.map((m, i) => (
+						<article class="person card" data-reveal data-spot>
+							{m.placeholder && <span class="ph-badge">placeholder · edit src/data/about.ts</span>}
+							<div class="photo">
+								{photos[i] ? (
+									<img src={photos[i]!.src} alt={`Photo of ${m.name}`} width="640" height="640" loading="lazy" data-pixelate />
+								) : (
+									<svg class="avatar" viewBox="0 0 8 8" aria-hidden="true">
+										{qcells.map(([x, y], k) => <rect x={x + 0.1} y={y + 0.1} width="0.8" height="0.8" class={k === qcells.length - 1 ? 'lime' : ''} style={`--d:${(k % 7) * 0.13}s`} />)}
+									</svg>
+								)}
+							</div>
+							<h3>{m.name}</h3>
+							<p class="role">{m.role}</p>
+							<p class="fact note">&gt; {m.fact}</p>
+						</article>
+					))}
+				</div>
+			</div>
+		</section>
+	)}
+
+	<!-- Pinned process -->
+	<section class="process" data-process>
+		<div class="wrap process-grid">
+			<div class="process-text">
+				<p class="kicker">how we work</p>
+				<h2>Three steps to <span class="accent">live.</span></h2>
+				<ol class="process-steps">
+					{process.map((s, i) => (
+						<li class:list={['pstep', { 'is-active': i === 0 }]} data-step={i}>
+							<span class="pnum">0{i + 1}</span>
+							<div>
+								<h3>{s.title}</h3>
+								<p>{s.body}</p>
+							</div>
+						</li>
+					))}
+				</ol>
+				<div class="process-bar" aria-hidden="true"><i></i></div>
+			</div>
+			<div class="process-stage" aria-hidden="true">
+				<div class="visual v-design is-active" data-visual="0">
+					<div class="browser">
+						<div class="b-top"><i></i><i></i><i></i></div>
+						<svg viewBox="0 0 300 190" class="wire">
+							<rect x="16" y="14" width="80" height="12" rx="3" />
+							<rect x="200" y="14" width="84" height="12" rx="3" />
+							<rect x="16" y="44" width="170" height="22" rx="4" />
+							<rect x="16" y="74" width="120" height="10" rx="3" />
+							<rect x="16" y="96" width="70" height="20" rx="10" class="fill" />
+							<rect x="196" y="44" width="88" height="72" rx="6" />
+							<rect x="16" y="132" width="82" height="44" rx="6" />
+							<rect x="109" y="132" width="82" height="44" rx="6" />
+							<rect x="202" y="132" width="82" height="44" rx="6" />
+						</svg>
+					</div>
+					<p class="v-cap note">&gt; sketching_layout...</p>
+				</div>
+				<div class="visual v-develop" data-visual="1">
+					<div class="code">
+						<p><b>const</b> site = <em>build</em>({'{'}</p>
+						<p>&nbsp;&nbsp;design: <s>'yours'</s>,</p>
+						<p>&nbsp;&nbsp;speed: <s>'fast'</s>,</p>
+						<p>&nbsp;&nbsp;mobile: <b>true</b>,</p>
+						<p>&nbsp;&nbsp;seo: <b>true</b>,</p>
+						<p>{'}'});</p>
+						<p class="ok">✓ compiled in 0.42s</p>
+					</div>
+					<p class="v-cap note">&gt; writing_code...</p>
+				</div>
+				<div class="visual v-launch" data-visual="2">
+					<div class="deploy">
+						<div class="rocket"><Icon name="rocket" size={56} /></div>
+						<div class="meter"><i></i></div>
+						<p class="note dline">&gt; deploying <span>100%</span></p>
+						<p class="live-tag"><span class="dot"></span>your-site.com is live</p>
+					</div>
+					<p class="v-cap note">&gt; going_live...</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Timeline -->
+	<section class="section">
+		<div class="wrap stack">
+			<p class="kicker" data-reveal>your first 30 days</p>
+			<h2 data-split>From hello <span class="accent">to live.</span></h2>
+			<div class="timeline" data-timeline>
+				<span class="tl-line" aria-hidden="true"><i></i></span>
+				<ol class="tl-list">
+					{timeline.map((t) => (
+						<li class="tl-item" data-reveal>
+							<span class="tl-dot" aria-hidden="true"></span>
+							<p class="tl-when note">{t.when}</p>
+							<h3>{t.title}</h3>
+							<p>{t.body}</p>
+						</li>
+					))}
+				</ol>
+			</div>
+		</div>
+	</section>
+
+	<!-- Numbers -->
+	<section class="section alt">
+		<div class="wrap">
+			<div class="stats">
+				{stats.map((s) => (
+					<div class="stat" data-reveal>
+						<p class="num"><span data-count={s.value}>{s.value}</span><span class="accent">{s.suffix}</span></p>
+						<p class="label">{s.label}</p>
+					</div>
+				))}
+			</div>
+		</div>
+	</section>
+
+	<!-- Tools -->
+	<section class="tools-head wrap">
+		<p class="kicker" data-reveal>tools we build with</p>
+	</section>
+	<Marquee items={tools} label="Tools we use" single small />
+
+	<!-- Testimonials -->
+	{quotes.length > 0 && (
+		<section class="section">
+			<div class="wrap stack">
+				<p class="kicker" data-reveal>kind words</p>
+				<h2 data-split>What clients <span class="accent">say.</span></h2>
+				<div class="quotes">
+					{quotes.map((t) => (
+						<figure class="card quote" data-reveal data-spot>
+							{t.placeholder && <span class="ph-badge">placeholder · local preview only</span>}
+							<span class="qmark" aria-hidden="true">“</span>
+							<blockquote>{t.quote}</blockquote>
+							<figcaption><strong>{t.name}</strong> · {t.business}</figcaption>
+						</figure>
+					))}
+				</div>
+			</div>
+		</section>
+	)}
+
+	<!-- FAQ -->
+	<section class="section">
+		<div class="wrap faq-grid">
+			<div class="stack faq-head">
+				<p class="kicker" data-reveal>good questions</p>
+				<h2 data-split>Things people <span class="accent">ask us.</span></h2>
+				<p class="lead" data-reveal>Something else on your mind? <a class="link" href="/contact/">Just ask.</a></p>
+			</div>
+			<div class="faq">
+				{faq.map((f, i) => (
+					<details class="qa" data-reveal open={i === 0}>
+						<summary><span>{f.q}</span><span class="plus" aria-hidden="true"></span></summary>
+						<p>{f.a}</p>
+					</details>
+				))}
+			</div>
+		</div>
+	</section>
 </Layout>
 
 <style>
 	.alt { background: var(--bg-2); border-block: 1px solid var(--line); }
-	.steps { list-style: none; padding: 0; margin: 3rem 0 0; }
-	.steps .card { position: relative; }
-	.num { position: absolute; top: 1.75rem; right: 2rem; font-family: var(--mono); font-weight: 700; font-size: 2.5rem; color: var(--line); }
-	.values { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 0; margin-top: 3rem; border-top: 1px solid var(--line); }
+	.ph-badge {
+		position: absolute; top: 0.9rem; right: 0.9rem; z-index: 2; font-family: var(--mono); font-size: 0.7rem; font-weight: 700;
+		color: var(--accent); border: 1px dashed var(--accent); padding: 0.2rem 0.45rem; border-radius: 0.35rem;
+	}
+
+	/* Hero + terminal */
+	.hero-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+	.term { background: #050505; border: 1px solid var(--line); border-radius: 1rem; overflow: hidden; font-family: var(--mono); font-size: 0.92rem; box-shadow: 0 30px 80px rgb(0 0 0 / 0.5); }
+	.term-bar { display: flex; align-items: center; gap: 0.45rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); background: #111; }
+	.term-bar i { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: #2a2a2a; }
+	.term-bar i:first-child { background: var(--accent); }
+	.term-bar span { margin-left: auto; color: var(--fg-3); font-size: 0.78rem; }
+	.term-body { list-style: none; margin: 0; padding: 1.25rem 1.25rem 1.5rem; display: grid; gap: 0.7rem; }
+	.term-body p { margin: 0; }
+	.prompt { color: var(--accent); font-weight: 700; }
+	.cmd { color: var(--fg); }
+	.out { color: var(--fg-2); padding-left: 2.1em; }
+	.blink { color: var(--accent); animation: tblink 1s steps(1) infinite; }
+	@keyframes tblink { 50% { opacity: 0; } }
+	:global(html.motion) .term [data-out] { visibility: hidden; }
+	:global(html.motion) .term.typed [data-out] { visibility: visible; }
+
+	/* Story */
+	.statement { font-size: clamp(1.75rem, 4.2vw, 3.5rem); font-weight: 600; line-height: 1.15; letter-spacing: -0.035em; margin-top: 2rem; max-width: 64rem; }
+	.values { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); margin-top: clamp(3rem, 6vw, 5rem); border-top: 1px solid var(--line); }
 	.value { padding: 2rem 2rem 2rem 0; border-bottom: 1px solid var(--line); }
 	.value h3::before { content: '■ '; color: var(--accent); font-size: 0.8em; }
 	.value p { color: var(--fg-2); margin-top: 0.6rem; max-width: 30rem; }
+
+	/* Team */
+	.team { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 22rem)); gap: 1.25rem; margin-top: 2.5rem; }
+	.person h3 { margin-top: 1.25rem; font-size: 1.5rem; }
+	.role { color: var(--fg-2); margin-top: 0.25rem; }
+	.fact { margin-top: 0.85rem; color: var(--accent); }
+	.photo { position: relative; aspect-ratio: 1; border-radius: 0.85rem; overflow: hidden; background: #111; }
+	.photo img, .photo :global(canvas) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+	.avatar { position: absolute; inset: 22%; width: 56%; height: 56%; }
+	.avatar rect { fill: #f2f2f2; transition: fill 0.3s; }
+	.avatar rect.lime { fill: var(--accent); }
+	.person:hover .avatar rect { animation: flick 0.9s var(--d) steps(1) infinite; }
+	@keyframes flick { 0%, 60% { fill: #f2f2f2; } 61%, 80% { fill: var(--accent); } 81% { fill: #2a2a2a; } }
+
+	/* Pinned process */
+	.process { min-height: 100svh; display: grid; align-content: center; padding-block: clamp(4rem, 8vw, 6rem); border-top: 1px solid var(--line); }
+	.process-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2rem, 6vw, 5rem); align-items: center; }
+	.process-text h2 { margin-top: 1.25rem; }
+	.process-steps { list-style: none; padding: 0; margin: 2.5rem 0 0; display: grid; gap: 0.5rem; }
+	.pstep { display: grid; grid-template-columns: 3rem 1fr; gap: 1rem; padding: 1.25rem 0; border-top: 1px solid var(--line); cursor: pointer; opacity: 0.35; transition: opacity 0.45s; }
+	.pstep.is-active { opacity: 1; }
+	.pnum { font-family: var(--mono); font-weight: 700; color: var(--fg-3); padding-top: 0.25rem; transition: color 0.45s; }
+	.pstep.is-active .pnum { color: var(--accent); }
+	.pstep h3 { font-size: clamp(1.5rem, 2.6vw, 2rem); }
+	.pstep p { color: var(--fg-2); margin-top: 0.4rem; max-width: 30rem; }
+	.process-bar { height: 2px; background: var(--line); margin-top: 1.5rem; overflow: hidden; }
+	.process-bar i { display: block; height: 100%; background: var(--accent); transform: scaleX(0.33); transform-origin: left; }
+	:global(html:not(.motion)) .pstep { opacity: 1; }
+
+	.process-stage { display: grid; aspect-ratio: 5 / 4; }
+	.visual {
+		grid-area: 1 / 1; display: grid; align-content: center; justify-items: center; gap: 1rem;
+		background: var(--bg-2); border: 1px solid var(--line); border-radius: 1.25rem; padding: clamp(1.25rem, 3vw, 2.5rem);
+		opacity: 0; transform: translateY(24px) scale(0.97); transition: opacity 0.5s, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+	.visual.is-active { opacity: 1; transform: none; }
+	.v-cap { color: var(--accent); }
+
+	.browser { width: 100%; background: #0b0b0b; border: 1px solid var(--line); border-radius: 0.75rem; overflow: hidden; }
+	.b-top { display: flex; gap: 0.35rem; padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--line); }
+	.b-top i { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #2a2a2a; }
+	.wire { display: block; width: 100%; }
+	.wire rect { fill: transparent; stroke: #4a4a4a; stroke-width: 1.5; stroke-dasharray: 600; stroke-dashoffset: 600; }
+	.v-design.is-active .wire rect { animation: draw 1.4s cubic-bezier(0.6, 0, 0.2, 1) forwards; }
+	.v-design.is-active .wire rect:nth-child(2) { animation-delay: 0.1s; }
+	.v-design.is-active .wire rect:nth-child(3) { animation-delay: 0.2s; }
+	.v-design.is-active .wire rect:nth-child(4) { animation-delay: 0.3s; }
+	.v-design.is-active .wire rect:nth-child(5) { animation: draw 1.2s 0.4s forwards, lime 0.4s 1.4s forwards; }
+	.v-design.is-active .wire rect:nth-child(6) { animation-delay: 0.45s; }
+	.v-design.is-active .wire rect:nth-child(n + 7) { animation-delay: 0.6s; }
+	@keyframes draw { to { stroke-dashoffset: 0; } }
+	@keyframes lime { to { fill: var(--accent); stroke: var(--accent); } }
+
+	.code { width: 100%; background: #050505; border: 1px solid var(--line); border-radius: 0.75rem; padding: 1.25rem; font-family: var(--mono); font-size: clamp(0.8rem, 1.3vw, 1rem); line-height: 1.8; }
+	.code p { margin: 0; white-space: nowrap; overflow: hidden; width: 0; }
+	.code b { color: var(--accent); font-weight: 700; }
+	.code em { color: #fff; font-style: normal; }
+	.code s { color: #b4b4b4; text-decoration: none; }
+	.code .ok { color: var(--accent); }
+	.v-develop.is-active .code p { animation: type 0.5s steps(24) forwards; }
+	.v-develop.is-active .code p:nth-child(2) { animation-delay: 0.35s; }
+	.v-develop.is-active .code p:nth-child(3) { animation-delay: 0.7s; }
+	.v-develop.is-active .code p:nth-child(4) { animation-delay: 1.05s; }
+	.v-develop.is-active .code p:nth-child(5) { animation-delay: 1.4s; }
+	.v-develop.is-active .code p:nth-child(6) { animation-delay: 1.75s; }
+	.v-develop.is-active .code p:nth-child(7) { animation-delay: 2.2s; }
+	@keyframes type { to { width: 100%; } }
+
+	.deploy { width: 100%; display: grid; justify-items: center; gap: 1.1rem; }
+	.rocket { color: var(--accent); }
+	.v-launch.is-active .rocket { animation: lift 1.8s cubic-bezier(0.6, 0, 0.2, 1) forwards; }
+	@keyframes lift { 0% { transform: translateY(12px); } 60% { transform: translateY(-4px); } 100% { transform: translateY(-14px) rotate(-6deg); } }
+	.meter { width: 100%; height: 0.75rem; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+	.meter i { display: block; height: 100%; background: var(--accent); transform: scaleX(0); transform-origin: left; }
+	.v-launch.is-active .meter i { animation: fill 1.6s 0.2s cubic-bezier(0.6, 0, 0.2, 1) forwards; }
+	@keyframes fill { to { transform: scaleX(1); } }
+	.dline { color: var(--fg-2); }
+	.live-tag { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; opacity: 0; }
+	.live-tag .dot { width: 0.6rem; height: 0.6rem; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 0 rgb(163 230 53 / 0.6); }
+	.v-launch.is-active .live-tag { animation: show 0.4s 1.8s forwards; }
+	.v-launch.is-active .live-tag .dot { animation: ping 1.4s 2s infinite; }
+	@keyframes show { to { opacity: 1; } }
+	@keyframes ping { 70% { box-shadow: 0 0 0 10px rgb(163 230 53 / 0); } 100% { box-shadow: 0 0 0 0 rgb(163 230 53 / 0); } }
+
+	/* Timeline */
+	.timeline { position: relative; padding-left: 2.5rem; margin-top: 3rem; max-width: 44rem; }
+	.tl-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 2.5rem; }
+	.tl-line { position: absolute; left: 0.45rem; top: 0.5rem; bottom: 0.5rem; width: 2px; background: var(--line); }
+	.tl-line i { display: block; width: 100%; height: 100%; background: var(--accent); transform: scaleY(0); transform-origin: top; }
+	:global(html:not(.motion)) .tl-line i { transform: none; }
+	.tl-item { position: relative; }
+	.tl-dot { position: absolute; left: -2.5rem; top: 0.3rem; width: 1rem; height: 1rem; background: var(--bg); border: 2px solid var(--line); transition: background 0.3s, border-color 0.3s; }
+	.tl-item.is-on .tl-dot, :global(html:not(.motion)) .tl-dot { background: var(--accent); border-color: var(--accent); }
+	.tl-when { color: var(--accent); }
+	.tl-item h3 { margin-top: 0.3rem; font-size: 1.6rem; }
+	.tl-item > p:last-child { color: var(--fg-2); margin-top: 0.4rem; }
+
+	/* Numbers */
+	.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 2rem; }
+	.num { font-size: clamp(3.5rem, 8vw, 6rem); font-weight: 700; letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; }
+	.stat .label { color: var(--fg-2); margin-top: 0.6rem; max-width: 14rem; }
+
+	.tools-head { padding-top: clamp(4rem, 9vw, 6rem); padding-bottom: 1.5rem; }
+
+	/* Testimonials */
+	.quotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1.25rem; margin-top: 2.5rem; }
+	.quote { margin: 0; }
+	.qmark { display: block; font-size: 5rem; line-height: 0.6; color: var(--accent); font-weight: 700; height: 2.5rem; }
+	.quote blockquote { margin: 0; font-size: 1.3rem; line-height: 1.45; letter-spacing: -0.01em; color: var(--fg); }
+	.quote figcaption { margin-top: 1.5rem; color: var(--fg-2); }
+	.quote strong { color: var(--fg); }
+
+	/* FAQ */
+	.faq-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: clamp(2rem, 6vw, 5rem); align-items: start; }
+	.faq-head { position: sticky; top: 7rem; }
+	.link { color: var(--accent); border-bottom: 1px solid currentColor; }
+	.faq { border-top: 1px solid var(--line); }
+	.qa { border-bottom: 1px solid var(--line); }
+	.qa summary { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; padding: 1.5rem 0; cursor: pointer; list-style: none; font-size: clamp(1.15rem, 2vw, 1.4rem); font-weight: 600; letter-spacing: -0.02em; transition: color 0.2s; }
+	.qa summary::-webkit-details-marker { display: none; }
+	.qa summary:hover { color: var(--accent); }
+	.plus { position: relative; width: 1.1rem; height: 1.1rem; flex: none; transition: transform 0.35s cubic-bezier(0.7, 0, 0.2, 1); }
+	.plus::before, .plus::after { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 2px; margin-top: -1px; background: var(--accent); }
+	.plus::after { transform: rotate(90deg); }
+	.qa[open] .plus { transform: rotate(45deg); }
+	.qa p { color: var(--fg-2); padding-bottom: 1.5rem; max-width: 36rem; }
+	/* Smooth open/close where the browser supports it */
+	.qa::details-content { block-size: 0; overflow: hidden; transition: block-size 0.4s cubic-bezier(0.7, 0, 0.2, 1), content-visibility 0.4s allow-discrete; }
+	.qa[open]::details-content { block-size: auto; }
+
+	@media (max-width: 900px) {
+		.hero-grid, .process-grid, .faq-grid { grid-template-columns: 1fr; }
+		.process { min-height: 0; }
+		.process-stage { display: none; }
+		.pstep { opacity: 1; }
+		.process-bar { display: none; }
+		.faq-head { position: static; }
+	}
 </style>
