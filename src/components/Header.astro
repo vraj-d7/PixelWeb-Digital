@@ -421,11 +421,8 @@ const commands = [
 	.cmdk-btn { display: inline-flex; align-items: center; gap: 0.45rem; height: 2.4rem; padding: 0 0.7rem; border: 1px solid var(--line); background: transparent; color: var(--fg-2); border-radius: 0.6rem; cursor: pointer; font: inherit; transition: border-color 0.2s, color 0.2s; }
 	.cmdk-btn:hover { border-color: var(--fg-3); color: var(--fg); }
 	kbd { font-family: var(--mono); font-size: 0.72rem; font-weight: 700; color: var(--fg-3); border: 1px solid var(--line); border-radius: 0.3rem; padding: 0.05rem 0.35rem; white-space: nowrap; line-height: 1.4; }
-	.nav-cta { position: relative; overflow: hidden; isolation: isolate; padding: 0.6rem 1.15rem; font-size: 0.95rem; transition: padding 0.35s, transform 0.15s; }
-	/* Pixel fill on hover: dark squares step in over the lime button */
-	.nav-cta::before { content: ''; position: absolute; inset: 0; z-index: -1; background: #0b0b0b; clip-path: inset(0 100% 0 0); transition: clip-path 0.4s steps(6); }
-	.nav-cta:hover { color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
-	.nav-cta:hover::before { clip-path: inset(0 0 0 0); }
+	/* Stays lime on hover, like the other primary buttons (no dark fill). */
+	.nav-cta { padding: 0.6rem 1.15rem; font-size: 0.95rem; }
 	.menu-btn { display: none; }
 
 	.progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; pointer-events: none; }
