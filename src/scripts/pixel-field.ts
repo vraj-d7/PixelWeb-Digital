@@ -240,7 +240,7 @@ export function pixelField(canvas: HTMLCanvasElement, animate: boolean, onShape?
 
 		const mx = pointer.active ? pointer.x : -1e5;
 		const my = pointer.active ? pointer.y : -1e5;
-		const RR = Math.max(80, icon.size * 0.36);
+		const RR = Math.max(45, icon.size * 0.4); // mouse push radius, in proportion to the icon
 		const ps = icon.cell * 0.8;
 		// A lime scan line sweeps down through the icon.
 		const scanY = icon.cy - icon.size * 0.6 + ((t % 2600) / 2600) * icon.size * 1.2;
