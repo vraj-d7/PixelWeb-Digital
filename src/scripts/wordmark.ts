@@ -1,6 +1,5 @@
 // Footer wordmark drawn as pixels on a canvas.
 // - Pixels fly in and fill the word left to right as you scroll to the bottom (and leave again if you scroll back up).
-// - The outline of the word is always visible underneath, so you can see it filling in.
 // - Under the mouse the pixels scatter and flicker lime, and the letter you're on jumps up.
 // - The word runs off the bottom edge of the page on purpose.
 // - Click and drag to paint pixels in the other colour; they fade back after a few seconds.
@@ -96,11 +95,6 @@ export function wordmark(wrap: HTMLElement) {
 			lift[i] += liftV[i];
 		}
 
-		// Outline of the word, always there.
-		ctx!.font = font(size);
-		ctx!.lineWidth = 1.25;
-		ctx!.strokeStyle = '#2e2e2e';
-		letters.forEach((L, i) => ctx!.strokeText(WORD[i], L.x0, base + lift[i]));
 
 		const R = Math.max(50, size * 0.2);
 		const s0 = step * 0.82;
