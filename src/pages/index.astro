@@ -22,6 +22,7 @@ const arrow = [[1, 0], [1, 1], [0, 2], [1, 2], [2, 2], [1, 3]];
 	<section class="hero" data-bg="#0b0b0b">
 		<canvas class="field" data-pixel-field aria-hidden="true"></canvas>
 		<div class="wrap hero-inner">
+			<div class="hero-text">
 			<p class="kicker prompt"><span data-type="hello_world">hello_world</span><span class="cursor-blink" aria-hidden="true">_</span></p>
 			<h1 data-hero-title>Meet Pixel<span class="accent">Web</span><br />Digital.</h1>
 			<p class="lead" data-hero-fade>Websites that don't just look good — they bring you <span class="rot" data-rotate="customers,bookings,sales,enquiries,calls">customers</span>.</p>
@@ -29,8 +30,13 @@ const arrow = [[1, 0], [1, 1], [0, 2], [1, 2], [2, 2], [1, 3]];
 				<a class="btn btn-primary" href="/contact/" data-magnetic>Get a free consultation <Icon name="arrow" size={20} /></a>
 				<a class="btn btn-ghost" href="/services/" data-magnetic>See what we do</a>
 			</div>
+			</div>
+			<!-- The pixel icon is drawn on the background canvas, centred on this box (see pixel-field.ts). -->
+			<div class="hero-slot" aria-hidden="true">
+				<div class="icon-box" data-icon-box></div>
+				<p class="play-hint note" data-hero-fade>&gt; now_building: <span class="shape-name" data-shape>web_design</span><br /><span class="dim">hover · click · play</span></p>
+			</div>
 		</div>
-		<p class="play-hint note" data-hero-fade aria-hidden="true">&gt; now_building: <span class="shape-name" data-shape>web_design</span><br /><span class="dim">hover · click · play</span></p>
 		<div class="wrap hero-foot" data-hero-fade>
 			<p class="note"><span class="live" aria-hidden="true"></span>status: taking_new_projects</p>
 			<p class="note scroll-hint">scroll
@@ -320,15 +326,21 @@ const arrow = [[1, 0], [1, 1], [0, 2], [1, 2], [2, 2], [1, 3]];
 		mask-image: linear-gradient(100deg, rgb(0 0 0 / 0.35) 20%, #000 75%);
 		-webkit-mask-image: linear-gradient(100deg, rgb(0 0 0 / 0.35) 20%, #000 75%);
 	}
-	.hero-inner { position: relative; z-index: 1; align-self: center; padding-block: clamp(4rem, 10vw, 7rem) 2rem; display: grid; gap: 1.75rem; justify-items: start; pointer-events: none; }
+	.hero-inner {
+		position: relative; z-index: 1; align-self: center; padding-block: clamp(4rem, 10vw, 7rem) 2rem; pointer-events: none;
+		/* Text column is as wide as the text; the icon column takes the rest, so the icon sits centred between them. */
+		display: grid; grid-template-columns: minmax(0, max-content) minmax(220px, 1fr); gap: 2rem; align-items: center;
+	}
+	.hero-text { display: grid; gap: 1.75rem; justify-items: start; }
+	.hero-slot { display: grid; justify-items: center; gap: 1.5rem; pointer-events: none; }
+	/* Leaves 2rem each side so the icon's 3D tilt never pokes outside the column. */
+	.icon-box { width: min(100% - 4rem, 340px, 36svh); aspect-ratio: 1; }
 	.hero-inner > * { pointer-events: auto; }
-	.hero h1 { font-size: clamp(3.25rem, 7.6vw, 8rem); line-height: 0.95; letter-spacing: -0.05em; }
+	/* Capped at 6rem so the headline and the pixel icon both fit inside the 72rem container on wide screens. */
+	.hero h1 { font-size: clamp(3.25rem, 6.4vw, 6rem); line-height: 0.95; letter-spacing: -0.05em; }
 	.hero .lead { max-width: 34rem; }
 	.rot { color: var(--accent); font-weight: 600; white-space: nowrap; border-bottom: 2px solid currentColor; }
-	.play-hint {
-		position: absolute; z-index: 1; left: 77%; top: calc(46% + min(18%, 10vw, 170px) + 1.75rem);
-		transform: translateX(-50%); margin: 0; color: var(--fg-3); pointer-events: none; white-space: nowrap;
-	}
+	.play-hint { margin: 0; color: var(--fg-3); white-space: nowrap; }
 	.play-hint { text-align: center; line-height: 1.7; }
 	.shape-name { color: var(--accent); display: inline-block; }
 	.shape-name.flash { animation: shape-in 0.5s steps(4); }
@@ -344,7 +356,9 @@ const arrow = [[1, 0], [1, 1], [0, 2], [1, 2], [2, 2], [1, 3]];
 	@keyframes px-down { 0%, 30% { background: var(--accent); } 31%, 100% { background: #3a3a3a; } }
 	@media (max-width: 760px) {
 		.field { mask-image: none; -webkit-mask-image: none; }
-		.hero-inner { padding-top: calc(min(38vw, 170px) + 4rem); }
+		.hero-inner { grid-template-columns: 1fr; gap: 1.5rem; padding-top: 2.5rem; }
+		.hero-slot { order: -1; }
+		.icon-box { width: min(42vw, 170px); }
 		.play-hint { display: none; }
 	}
 	@media (max-width: 480px) { .scroll-hint { display: none; } }

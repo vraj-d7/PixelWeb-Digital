@@ -89,13 +89,28 @@ export function pixelField(canvas: HTMLCanvasElement, animate: boolean, onShape?
 	const homeX = (p: { gc: number }) => icon.cx - icon.size / 2 + (p.gc + 0.5) * icon.cell;
 	const homeY = (p: { gr: number }) => icon.cy - icon.size / 2 + (p.gr + 0.5) * icon.cell;
 
+	// The page marks where the icon goes with [data-icon-box] (a square in the hero's right-hand column),
+	// so the icon always lines up with the content container, at any screen width.
+	const box = document.querySelector<HTMLElement>('[data-icon-box]');
+	// Position of an element relative to the canvas's parent, ignoring CSS transforms (like the scroll parallax).
+	const offsetIn = (el: HTMLElement, root: HTMLElement) => {
+		let x = 0, y = 0, n: HTMLElement | null = el;
+		while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent as HTMLElement | null; }
+		return { x, y };
+	};
+
 	function layout() {
-		// Same breakpoint as the hero CSS (which measures the window, scrollbar included).
-		const wide = matchMedia('(min-width: 761px)').matches;
-		// Keep it well inside the hero: never more than 36% of its height, 20% of its width, or 340px.
-		icon.size = wide ? Math.min(h * 0.36, w * 0.2, 340) : Math.min(w * 0.38, 170);
-		icon.cx = wide ? w * 0.77 : w * 0.5;
-		icon.cy = wide ? h * 0.46 : icon.size / 2 + 32;
+		if (box && box.offsetWidth) {
+			const o = offsetIn(box, area);
+			icon.size = Math.min(box.offsetWidth, box.offsetHeight);
+			icon.cx = o.x + box.offsetWidth / 2;
+			icon.cy = o.y + box.offsetHeight / 2;
+		} else {
+			// Fallback when there's no box: right side of the canvas.
+			icon.size = Math.min(h * 0.36, w * 0.2, 340);
+			icon.cx = w * 0.77;
+			icon.cy = h * 0.46;
+		}
 		icon.cell = icon.size / GRID;
 	}
 
@@ -306,7 +321,11 @@ export function pixelField(canvas: HTMLCanvasElement, animate: boolean, onShape?
 		}
 	});
 
-	new ResizeObserver(resize).observe(canvas);
+	const ro = new ResizeObserver(resize);
+	ro.observe(canvas);
+	if (box) ro.observe(box);
+	// The text column can shift once the web fonts load; re-measure then.
+	document.fonts?.ready.then(() => { layout(); if (!animate) drawStatic(); });
 	let onScreen = false;
 	new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; setRunning(onScreen && !document.hidden); }).observe(canvas);
 	document.addEventListener('visibilitychange', () => setRunning(onScreen && !document.hidden));
