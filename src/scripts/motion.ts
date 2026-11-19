@@ -476,7 +476,13 @@ function spotlights() {
 
 /* ---------- start ---------- */
 const canvas = document.querySelector<HTMLCanvasElement>('[data-pixel-field]');
-const field = canvas ? pixelField(canvas, motion) : null;
+// The hero hint shows which shape the pixel icon is currently making.
+const shapeLabel = document.querySelector<HTMLElement>('[data-shape]');
+const field = canvas ? pixelField(canvas, motion, (label) => {
+	if (!shapeLabel) return;
+	shapeLabel.textContent = label;
+	shapeLabel.classList.remove('flash'); void shapeLabel.offsetWidth; shapeLabel.classList.add('flash');
+}) : null;
 
 if (motion) {
 	const start = () => {
