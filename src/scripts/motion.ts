@@ -27,11 +27,10 @@ function smoothScroll() {
 	gsap.ticker.add((t) => lenis?.raf(t * 1000));
 	gsap.ticker.lagSmoothing(0);
 
-	// Hide the header while scrolling down, bring it back on the way up.
+	// The header always stays visible; once you scroll it gets a blurred dark background so it stays readable.
 	const header = document.querySelector<HTMLElement>('.header');
-	lenis.on('scroll', ({ scroll, direction }: Lenis) => {
+	lenis.on('scroll', ({ scroll }: Lenis) => {
 		if (!header || root.classList.contains('menu-open')) return;
-		header.classList.toggle('is-hidden', direction === 1 && scroll > 160);
 		header.classList.toggle('is-scrolled', scroll > 20);
 	});
 }
