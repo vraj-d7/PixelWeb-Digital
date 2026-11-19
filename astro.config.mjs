@@ -4,7 +4,8 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-	// TODO: change to the real domain once it's bought. Used for canonical URLs and the sitemap.
-	site: 'https://pixelweb.digital',
+	// The live address. Used for canonical URLs and the sitemap.
+	// TODO: when you connect your own domain in Cloudflare, put it here and run `npm run deploy` again.
+	site: 'https://pixelweb-digital.vraj-d7.workers.dev',
 	integrations: [sitemap({ filter: (page) => !page.endsWith('/404/') })],
 });
