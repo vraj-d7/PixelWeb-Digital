@@ -92,7 +92,8 @@ export function pixelField(canvas: HTMLCanvasElement, animate: boolean, onShape?
 	function layout() {
 		// Same breakpoint as the hero CSS (which measures the window, scrollbar included).
 		const wide = matchMedia('(min-width: 761px)').matches;
-		icon.size = wide ? Math.min(h * 0.5, w * 0.25) : Math.min(w * 0.42, 200);
+		// Keep it well inside the hero: never more than 36% of its height, 20% of its width, or 340px.
+		icon.size = wide ? Math.min(h * 0.36, w * 0.2, 340) : Math.min(w * 0.38, 170);
 		icon.cx = wide ? w * 0.77 : w * 0.5;
 		icon.cy = wide ? h * 0.46 : icon.size / 2 + 32;
 		icon.cell = icon.size / GRID;
@@ -257,7 +258,7 @@ export function pixelField(canvas: HTMLCanvasElement, animate: boolean, onShape?
 
 			// Perspective: pixels on the side nearest the mouse are drawn bigger and pushed outward.
 			const rx = p.x - icon.cx, ry = p.y - icon.cy;
-			const persp = 1 + (rx * tilt.x + ry * tilt.y) / (icon.size * 1.4);
+			const persp = 1 + (rx * tilt.x + ry * tilt.y) / (icon.size * 2.2);
 			const px = icon.cx + rx * persp, py = icon.cy + ry * persp;
 
 			if (p.dust) {

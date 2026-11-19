@@ -326,7 +326,7 @@ const arrow = [[1, 0], [1, 1], [0, 2], [1, 2], [2, 2], [1, 3]];
 	.hero .lead { max-width: 34rem; }
 	.rot { color: var(--accent); font-weight: 600; white-space: nowrap; border-bottom: 2px solid currentColor; }
 	.play-hint {
-		position: absolute; z-index: 1; left: 77%; top: calc(46% + min(25%, 12.5vw) + 1.5rem);
+		position: absolute; z-index: 1; left: 77%; top: calc(46% + min(18%, 10vw, 170px) + 1.75rem);
 		transform: translateX(-50%); margin: 0; color: var(--fg-3); pointer-events: none; white-space: nowrap;
 	}
 	.play-hint { text-align: center; line-height: 1.7; }
@@ -344,7 +344,7 @@ const arrow = [[1, 0], [1, 1], [0, 2], [1, 2], [2, 2], [1, 3]];
 	@keyframes px-down { 0%, 30% { background: var(--accent); } 31%, 100% { background: #3a3a3a; } }
 	@media (max-width: 760px) {
 		.field { mask-image: none; -webkit-mask-image: none; }
-		.hero-inner { padding-top: calc(min(44vw, 210px) + 4rem); }
+		.hero-inner { padding-top: calc(min(38vw, 170px) + 4rem); }
 		.play-hint { display: none; }
 	}
 	@media (max-width: 480px) { .scroll-hint { display: none; } }
